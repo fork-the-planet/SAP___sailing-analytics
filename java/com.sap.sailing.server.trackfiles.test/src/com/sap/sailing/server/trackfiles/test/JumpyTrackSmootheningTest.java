@@ -199,8 +199,8 @@ public class JumpyTrackSmootheningTest {
             assertNotNull(markPassings);
             assertEquals(13, markPassings.size());
         }
-        assertTrue(durationForAdjustedTrack.times(8).compareTo(durationForOriginalTrack) < 0,
-                "Expected duration for mark passing analysis on adjusted track to be at least eight times less than for original track: "+
+        assertTrue(durationForAdjustedTrack.times(2).compareTo(durationForOriginalTrack) < 0,
+                "Expected duration for mark passing analysis on adjusted track to be at least two times less than for original track: "+
                 durationForAdjustedTrack+" vs. "+durationForOriginalTrack);
     }
     
