@@ -14,25 +14,47 @@ SAP is at the center of today’s technology revolution, developing innovations 
 
 ### General
 
+* [[Onboarding|wiki/howto/onboarding]]
 * [[Information about this Wiki and HowTo|wiki/info/general/wiki]]
 * [[General Project Information|wiki/info/general/general-information]]
 * [[Project History|wiki/info/general/project-history]]
+* [[Development Environment|wiki/info/landscape/development-environment]]
 
-### Landscape
+### Development
 
-* Architecture and Infrastructure
+* [[Development Environment|wiki/info/landscape/development-environment]]
+* [[Typical Development Scenarios|wiki/info/landscape/typical-development-scenarios]]
+* [[Building and Deploying|wiki/info/landscape/building-and-deploying]]
+* [[Continuous Integration with Hudson/Jenkins|wiki/howto/development/ci]]
+* [[Dispatch|wiki/howto/development/dispatch]]
+* [[Working with GWT UI Binder|wiki/howto/development/gwt-ui-binder]]
+* [[Java De(Serialization) and Circular Dependencies|wiki/howto/development/java-de-serialization-and-circular-dependencies]]
+* [[Create boat graphics for the 2D race viewer|wiki/howto/development/boatgraphicssvg]]
+* [[JMX Support|wiki/howto/development/jmx]]
+* [[Working with GWT Locally|wiki/howto/development/local-gwt]]
+* [[UI Tests with Selenium|wiki/howto/development/selenium-ui-tests]]
+* [[Profiling|wiki/howto/development/profiling]]
+* [[Working with GWT Super Dev Mode|wiki/howto/development/super-dev-mode]]
+* [[Training of internal Wind Estimation models|wiki/howto/windestimation]]
+* [[Whitelabelling|wiki/howto/whitelabelling]]
+* [[Secured Settings|wiki/howto/development/secured-settings]]
+* [[Webdesign|wiki/info/landscape/webdesign]]
+
+### Architecture and Infrastructure
   * [[Workspace, Bundles, Projects|wiki/info/general/workspace-bundles-projects-structure]]
   * [[Runtime Environment|wiki/info/landscape/runtime-environment]]
   * [[Basic architectual principles|wiki/info/landscape/basic-architectural-principles]]
   * [[User Management|wiki/info/landscape/usermanagement]]
   * [[Igtimi Windbot Riot Connector|wiki/info/landscape/igtimi-riot]]
-  * [[Development Environment|wiki/info/landscape/development-environment]]
   * [[Production Environment|wiki/info/landscape/production-environment]]
   * [[Internationalization (i18n)|wiki/howto/development/i18n]]
   * [[AI Agent|wiki/info/landscape/ai-agent]]
   * [[Malware Scanning|wiki/info/landscape/malware-scanning]]
-* [[RaceLog Tracking Server Architecture|wiki/info/landscape/server]]
+  * [[RaceLog Tracking Server Architecture|wiki/info/landscape/server]]
   * Environment Overview [[PDF|wiki/info/mobile/event-tracking/architecture.pdf]] | [[SVG|wiki/info/mobile/event-tracking/architecture.svg]]
+
+### Landscape
+
 * Amazon
   * [[Amazon EC2|wiki/info/landscape/amazon-ec2]]
   * [[Upgrading ARCHIVE server|wiki/info/landscape/archive-server-upgrade]]
@@ -40,6 +62,7 @@ SAP is at the center of today’s technology revolution, developing innovations 
   * [[Creating an EC2 image from scratch|wiki/info/landscape/creating-ec2-image-from-scratch]]
   * [[Upgrading an EC2 image|wiki/info/landscape/upgrading-ec2-image]]
   * [[Creating a webserver EC2 image from scratch|wiki/info/landscape/creating-ec2-image-for-webserver-from-scratch]]
+  * [[Upgrading Operating System Across Landscape|wiki/info/landscape/operating-system-upgrade]]
   * [[EC2 mail relaying vs. Amazon Simple E-Mail Service (SES)|wiki/info/landscape/mail-relaying]]
   * [[Establishing support@sapsailing.com with AWS SES, SNS, and Lambda|wiki/info/landscape/support-email]]
   * [[Creating an EC2 image for a MongoDB Replica Set from scratch|wiki/info/landscape/creating-ec2-mongodb-image-from-scratch]]
@@ -50,27 +73,8 @@ SAP is at the center of today’s technology revolution, developing innovations 
 * [[Downloading and Archiving TracTrac Events|wiki/howto/downloading-and-archiving-tractrac-events]]
 * [[Data Mining Architecture|wiki/info/landscape/data-mining-architecture]]
 * [[Typical Data Mining Scenarios|wiki/info/landscape/typical-data-mining-scenarios]]
-* [[Webdesign|wiki/info/landscape/webdesign]]
 * [[sail-insight.com website|wiki/info/landscape/sail-insight.com-website]]
 * [[Docker Registry|wiki/info/landscape/docker-registry]]
-
-### Development
-
-* [[Typical Development Scenarios|wiki/info/landscape/typical-development-scenarios]]
-* [[Building and Deploying|wiki/info/landscape/building-and-deploying]]
-* [[Create boat graphics for the 2D race viewer|wiki/howto/development/boatgraphicssvg]]
-* [[Continuous Integration with Hudson/Jenkins|wiki/howto/development/ci]]
-* [[Dispatch|wiki/howto/development/dispatch]]
-* [[Working with GWT UI Binder|wiki/howto/development/gwt-ui-binder]]
-* [[Java De(Serialization) and Circular Dependencies|wiki/howto/development/java-de-serialization-and-circular-dependencies]]
-* [[JMX Support|wiki/howto/development/jmx]]
-* [[Working with GWT Locally|wiki/howto/development/local-gwt]]
-* [[UI Tests with Selenium|wiki/howto/development/selenium-ui-tests]]
-* [[Profiling|wiki/howto/development/profiling]]
-* [[Working with GWT Super Dev Mode|wiki/howto/development/super-dev-mode]]
-* [[Training of internal Wind Estimation models|wiki/howto/windestimation]]
-* [[Whitelabelling|wiki/howto/whitelabelling]]
-* [[Secured Settings|wiki/howto/development/secured-settings]]
 
 ### Mobile
 
@@ -154,10 +158,8 @@ SAP is at the center of today’s technology revolution, developing innovations 
 * [[Monitoring Apache and RabbitMQ|wiki/misc/monitoring-apache-and-rabbitmq]]
 
 ## Projects
-* [[Analytics on a stick|wiki/projects/analytics-on-a-stick]]
-* [[Consolidating User Stores (bug 4006 / 4018)|wiki/projects/consolidating-user-stores]]
-* [[Cloud Infrastructure Orchestration|wiki/projects/cloud-orchestrator]]
 * [[Management Console for Easier Administration|wiki/howto/development/management-console]]
+* [[Cloud Infrastructure Orchestration|wiki/projects/cloud-orchestrator]]
 
 ## Events and Planning
 * [[Project Planning (bigger development)|wiki/events/planning]]

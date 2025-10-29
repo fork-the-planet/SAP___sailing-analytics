@@ -2565,6 +2565,9 @@ public interface StringMessages extends com.sap.sse.gwt.client.StringMessages,
     String unableToLoadIpsBlockedForBearerTokenAbuse();
     String ipAddress();
     String filterIpAddresses();
+    String exportTWAHistogramToCsv();
+    String exportWindSpeedHistogramToCsv();
+    String optionalBearerTokenForWindImport();
     String unlock();
     String ipsLockedForUserCreationAbuse();
     String unableToLoadIpsBlockedForUserCreationAbuse();
