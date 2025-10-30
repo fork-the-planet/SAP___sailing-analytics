@@ -6,12 +6,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.sap.sailing.gwt.ui.client.SailingServiceWriteAsync;
 import com.sap.sailing.gwt.ui.client.StringMessages;
@@ -23,6 +26,7 @@ import com.sap.sse.gwt.client.panels.LabeledAbstractFilterablePanel;
 import com.sap.sse.security.shared.HasPermissions;
 import com.sap.sse.security.ui.client.UserService;
 import com.sap.sse.security.ui.client.component.AccessControlledButtonPanel;
+import com.sap.sse.security.ui.client.component.SelectedElementsCountingButton;
 
 abstract class IPBlocklistTableWrapper
         extends TableWrapper<IpToTimedLockDTO, RefreshableSelectionModel<IpToTimedLockDTO>> {
@@ -53,13 +57,25 @@ abstract class IPBlocklistTableWrapper
         this.securedDomainType = securedDomainType;
         this.userService = userService;
         this.errorMessageOnDataFailureString = errorMessageOnDataFailureString;
+        this.filterField = composeFilterField();
         this.asWidget().ensureDebugId("wrappedTable");
         this.table.ensureDebugId("cellTable");
-        filterField = composeFilterField();
-        mainPanel.insert(filterField.asWidget(), 0);
-        mainPanel.insert(composeButtonPanel(), 1);
-        configureColumns();
+        configureDataColumns();
+        setButtonsAndFilterOnMainPanel();
         loadDataAndPopulateTable();
+    }
+
+    private void setButtonsAndFilterOnMainPanel() {
+        final HorizontalPanel searchPanel = new HorizontalPanel();
+        searchPanel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
+        searchPanel.setSpacing(5);
+        final Label label = new Label(getStringMessages().filterIpAddresses() + ": ");
+        searchPanel.add(label);
+        searchPanel.add(filterField.getTextBox());
+        // inserted with indices to put them above the table
+        mainPanel.insert(searchPanel, 0);
+        mainPanel.insert(composeButtonPanel(), 1);
+        mainPanel.setSpacing(5);
     }
 
     private AccessControlledButtonPanel composeButtonPanel() {
@@ -71,25 +87,27 @@ abstract class IPBlocklistTableWrapper
             }
         });
         refreshbutton.ensureDebugId("refreshButton");
-        final Button unlockbutton = buttonPanel.addAction(getStringMessages().unlock(), () -> true, new Command() {
-            @Override
-            public void execute() {
-                for (IpToTimedLockDTO e : getSelectionModel().getSelectedSet()) {
-                    unlockIP(e.ip, new AsyncCallback<Void>() {
-                        @Override
-                        public void onFailure(Throwable caught) {
-                            errorReporter.reportError(errorMessageOnDataFailureString);
-                        }
+        final Button unlockButton = new SelectedElementsCountingButton<IpToTimedLockDTO>(getStringMessages().unlock(),
+                getSelectionModel(), new ClickHandler() {
+                    @Override
+                    public void onClick(ClickEvent event) {
+                        for (IpToTimedLockDTO e : getSelectionModel().getSelectedSet()) {
+                            unlockIP(e.ip, new AsyncCallback<Void>() {
+                                @Override
+                                public void onFailure(Throwable caught) {
+                                    errorReporter.reportError(errorMessageOnDataFailureString);
+                                }
 
-                        @Override
-                        public void onSuccess(Void result) {
-                            filterField.remove(e);
+                                @Override
+                                public void onSuccess(Void result) {
+                                    filterField.remove(e);
+                                }
+                            });
                         }
-                    });
-                }
-            }
-        });
-        unlockbutton.ensureDebugId("unlockButton");
+                    }
+                });
+        unlockButton.ensureDebugId("unlockButton");
+        buttonPanel.insertWidgetAtPosition(unlockButton, 1);
         return buttonPanel;
     }
 
@@ -116,7 +134,7 @@ abstract class IPBlocklistTableWrapper
         fetchData(dataInitializationCallback);
     }
 
-    private void configureColumns() {
+    private void configureDataColumns() {
         final ListHandler<IpToTimedLockDTO> columnListHandler = getColumnSortHandler();
         addColumn(record -> record.ip, getStringMessages().ipAddress());
         final Comparator<IpToTimedLockDTO> expiryComparator = (o1, o2) -> {
@@ -133,7 +151,7 @@ abstract class IPBlocklistTableWrapper
                 getStringMessages()) {
             @Override
             public Iterable<String> getSearchableStrings(IpToTimedLockDTO dto) {
-                List<String> string = new ArrayList<String>();
+                final List<String> string = new ArrayList<String>();
                 string.add(dto.ip);
                 return string;
             }
@@ -143,8 +161,6 @@ abstract class IPBlocklistTableWrapper
                 return table;
             }
         };
-        final CheckBox filterCheckbox = new CheckBox(getStringMessages().filterIpAddresses());
-        filterCheckbox.addValueChangeHandler(checked -> filterField.filter());
         registerSelectionModelOnNewDataProvider(filterField.getAllListDataProvider());
         return filterField;
     }
