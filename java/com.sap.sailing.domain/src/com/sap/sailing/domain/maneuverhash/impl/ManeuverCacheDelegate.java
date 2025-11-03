@@ -75,6 +75,7 @@ public class ManeuverCacheDelegate implements ManeuverCache<Competitor, List<Man
             synchronized (this) {
                 if (maneuverRaceFingerprintRegistry != null) {
                     logger.info("Compare maneuverfingerprints");
+                    race.waitForAllRaceLogsAttacehd();
                     fingerprint = maneuverRaceFingerprintRegistry.getManeuverRaceFingerprint(race.getRaceIdentifier());
                 } else {
                     fingerprint = null;

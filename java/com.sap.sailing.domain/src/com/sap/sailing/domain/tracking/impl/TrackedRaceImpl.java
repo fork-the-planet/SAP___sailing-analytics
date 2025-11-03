@@ -3150,7 +3150,7 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
     
    
     
-    private void waitForAllRaceLogAttacehd() {
+    public void waitForAllRaceLogsAttacehd() {
         final  CountDownLatch latchForRaceLogs = new CountDownLatch(1); // alternative schauen
         
         final  Iterable<Triple<Leaderboard, RaceColumn, Fleet>> ecpextedLinks = TrackedRaceImpl.this.getRaceLogResolver()
@@ -3203,7 +3203,7 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
             triggerManeuverCacheRecalculationForAllCompetitors();
         }
         
-        waitForAllRaceLogAttacehd();
+//        waitForAllRaceLogAttacehd();
         maneuverCache.resume();
     }
 
