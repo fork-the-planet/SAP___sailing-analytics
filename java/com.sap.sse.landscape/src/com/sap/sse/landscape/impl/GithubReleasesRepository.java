@@ -216,7 +216,7 @@ public class GithubReleasesRepository extends AbstractReleaseRepository implemen
             } else if (cacheContainsOldestRelease) {
                 throw new NoSuchElementException();
             } else {
-                while (nextPageURL != null && cachedReleasesIterator != null) {
+                while (nextPageURL != null && cachedReleasesIterator == null) {
                     try {
                         loadNextPage(/* olderThan */ releasesByPublishingTimePoint.firstKey());
                     } catch (IOException | ParseException e) {
