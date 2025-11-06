@@ -5,12 +5,19 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.sap.sse.common.Util;
 import com.sap.sse.landscape.Release;
+import com.sap.sse.util.ThreadPoolUtil;
 
 public class TestGithubReleaseRepository {
     private static final String DOCKER_25 = "docker-25";
@@ -63,5 +70,20 @@ public class TestGithubReleaseRepository {
     @Test
     public void testOldDocker17ReleaseExists() {
         assertFalse(Util.isEmpty(Util.filter(repository, release->release.getName().equals("docker-17-202404262046"))));
+    }
+    
+    @Test
+    public void testConcurrentAccess() throws InterruptedException, ExecutionException {
+        final ScheduledExecutorService threadPool = ThreadPoolUtil.INSTANCE.createForegroundTaskThreadPoolExecutor(10, getClass().getName()+":testConcurrentAccess()");
+        final Map<String, Future<Release>> futures = new HashMap<>();
+        final String[] prefixes = new String[] { "main", "docker-25", "docker-24", "docker-21", "docker-17" };
+        for (final String prefix : prefixes) {
+            futures.put(prefix, threadPool.submit(()->repository.getLatestRelease(prefix)));
+        }
+        for (final String prefix : prefixes) {
+            assertNotNull(futures.get(prefix).get());
+            assertEquals(prefix, futures.get(prefix).get().getBaseName());
+        }
+        threadPool.shutdown();
     }
 }
