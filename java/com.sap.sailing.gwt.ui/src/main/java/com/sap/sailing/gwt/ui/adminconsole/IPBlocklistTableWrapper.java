@@ -103,13 +103,15 @@ abstract class IPBlocklistTableWrapper
 
     private Widget composeButtonPanel() {
         final HorizontalPanel buttonPanel = new HorizontalPanel();
-        final Button refreshbutton = new Button(getStringMessages().refresh(), new ClickHandler() {
+        buttonPanel.setSpacing(5);
+        final Button refreshButton = new Button(getStringMessages().refresh(), new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 loadDataAndPopulateTable();
             }
         });
-        refreshbutton.ensureDebugId("refreshButton");
+        refreshButton.ensureDebugId("refreshButton");
+        buttonPanel.add(refreshButton);
         if (canUnlock()) {
             final Button unlockButton = new SelectedElementsCountingButton<IpToTimedLockDTO>(
                     getStringMessages().unlock(), getSelectionModel(), new ClickHandler() {
@@ -131,7 +133,7 @@ abstract class IPBlocklistTableWrapper
                         }
                     });
             unlockButton.ensureDebugId("unlockButton");
-            buttonPanel.insert(unlockButton, 1);
+            buttonPanel.add(unlockButton);
         }
         return buttonPanel;
     }
