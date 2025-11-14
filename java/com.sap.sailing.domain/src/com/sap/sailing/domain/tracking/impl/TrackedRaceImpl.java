@@ -41,7 +41,6 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.apache.commons.math.FunctionEvaluationException;
 import org.apache.commons.math.MaxIterationsExceededException;
@@ -66,7 +65,6 @@ import com.sap.sailing.domain.abstractlog.race.state.racingprocedure.ReadonlyRac
 import com.sap.sailing.domain.abstractlog.regatta.RegattaLog;
 import com.sap.sailing.domain.abstractlog.regatta.tracking.analyzing.impl.RegattaLogDefinedMarkAnalyzer;
 import com.sap.sailing.domain.base.Boat;
-//import com.sap.sailing.domain.base.CPUMeteringType;
 import com.sap.sailing.domain.base.Competitor;
 import com.sap.sailing.domain.base.ControlPoint;
 import com.sap.sailing.domain.base.Course;
@@ -200,9 +198,6 @@ import com.sap.sse.shared.util.impl.ApproximateTime;
 import com.sap.sse.shared.util.impl.ArrayListNavigableSet;
 import com.sap.sse.util.IdentityWrapper;
 import com.sap.sse.util.SmartFutureCache.EmptyUpdateInterval;
-//import com.sap.sse.util.SmartFutureCache;
-//import com.sap.sse.util.SmartFutureCache.AbstractCacheUpdater;
-//import com.sap.sse.util.SmartFutureCache.EmptyUpdateInterval;
 import com.sap.sse.util.impl.FutureTaskWithTracingGet;
 
 import difflib.DiffUtils;
@@ -865,33 +860,6 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
 
     private ManeuverCacheDelegate createManeuverCache(ManeuverRaceFingerprintRegistry maneuverRaceFingerprintRegistry) {
         return new ManeuverCacheDelegate(this, maneuverRaceFingerprintRegistry);
-        
-        
-//                new ManeuverFromDatabase(false, this, maneuverRaceFingerprintRegistry), 
-//                new  SmartFutureCache(
-//                        new AbstractCacheUpdater<Competitor, List<Maneuver>, EmptyUpdateInterval>() {
-//                            @Override
-//                            public List<Maneuver> computeCacheUpdate(Competitor competitor, EmptyUpdateInterval updateInterval)
-//                                    throws NoWindException {
-//                                return getTrackedRegatta().callWithCPUMeterWithException(()->{
-//                                    Duration averageIntervalBetweenRawFixes = getTrack(competitor).getAverageIntervalBetweenRawFixes();
-//                                    if (averageIntervalBetweenRawFixes != null) {
-//                                        ManeuverDetector maneuverDetector;
-//                                        // FIXME The LowGPSSamplingRateManeuverDetectorImpl doesn't work very well; it recognizes many tacks only as bear-away and doesn't seem to have any noticeable benefits... See ORC Worlds 2019 ORC A Long Offshore
-//            //                            if (averageIntervalBetweenRawFixes.asSeconds() >= 30) {
-//            //                                maneuverDetector = new LowGPSSamplingRateManeuverDetectorImpl(TrackedRaceImpl.this, competitor);
-//            //                            } else {
-//                                            maneuverDetector = maneuverDetectorPerCompetitorCache.getValue(competitor);
-//            //                            }
-//                                        List<Maneuver> maneuvers = computeManeuvers(competitor, maneuverDetector);
-//                                        return maneuvers;
-//                                    } else {
-//                                        return Collections.emptyList();
-//                                    }
-//                                }, CPUMeteringType.MANEUVER_DETECTION.name());
-//                            }
-//                        }, /* nameForLocks */ "Maneuver cache for race " + getRace().getName());
-
     }
 
     /**
@@ -3145,24 +3113,18 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
         maneuverCache.suspend();
     }
     
-
-
-    
-   
-    
-    public void waitForAllRaceLogsAttacehd() {
-        final  CountDownLatch latchForRaceLogs = new CountDownLatch(1); // alternative schauen
-        
+    public void waitForAllRaceLogsAttached() {
+        final  CountDownLatch latchForRaceLogs = new CountDownLatch(1); // Alternatives possible
         final  Iterable<Triple<Leaderboard, RaceColumn, Fleet>> ecpextedLinks = TrackedRaceImpl.this.getRaceLogResolver()
                 .getColumnsWithRaceLogForTrackedRace(getRaceIdentifier()); //Namen 
-        final int numberOfExpecteddRaceLogs = Util.size(ecpextedLinks); // Namen ändern
+        final int numberOfExpectedRaceLogs = Util.size(ecpextedLinks);
 
          AbstractRaceChangeListener raceLogAttachedListener = new AbstractRaceChangeListener() {
              
              @Override
              public void raceLogAttached(RaceLog raceLog) {
                  int numberOfAttachedRaceLogs = Util.size(getAttachedRaceLogs());
-                 if(numberOfAttachedRaceLogs >=numberOfExpecteddRaceLogs) {
+                 if(numberOfAttachedRaceLogs >=numberOfExpectedRaceLogs) {
                      latchForRaceLogs.countDown();
                  }
              }
@@ -3173,7 +3135,7 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
         final int numberOfAttachedRaceLogs = Util.size(getAttachedRaceLogs());
         
         try {
-            if (numberOfAttachedRaceLogs < numberOfExpecteddRaceLogs) {
+            if (numberOfAttachedRaceLogs < numberOfExpectedRaceLogs) {
                 latchForRaceLogs.await();
             }    
         } catch (InterruptedException e) {
@@ -3202,8 +3164,6 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
         if (triggerManeuverCacheInvalidationForAllCompetitors) {
             triggerManeuverCacheRecalculationForAllCompetitors();
         }
-        
-//        waitForAllRaceLogAttacehd();
         maneuverCache.resume();
     }
 
@@ -3865,7 +3825,6 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
         return legDeterminingDirection;
     }
 
-
     @Override
     public LineDetails getStartLine(TimePoint at) {
         return getLineLengthAndAdvantage(at, getRace().getCourse().getFirstWaypoint());
@@ -4501,6 +4460,5 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
 
     public ShortTimeAfterLastHitCache<Competitor, IncrementalManeuverDetector> getManeuverDetectorPerCompetitorCache() {
         return maneuverDetectorPerCompetitorCache;
-        
     }
 }

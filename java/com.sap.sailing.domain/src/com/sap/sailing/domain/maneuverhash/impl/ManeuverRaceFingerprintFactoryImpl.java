@@ -4,11 +4,9 @@ import org.json.simple.JSONObject;
 
 import com.sap.sailing.domain.maneuverhash.ManeuverRaceFingerprint;
 import com.sap.sailing.domain.maneuverhash.ManeuverRaceFingerprintFactory;
-//import com.sap.sailing.domain.maneuverhash.impl.ManeuverRaceFingerprintImpl;
 import com.sap.sailing.domain.tracking.TrackedRace;
 
 public class ManeuverRaceFingerprintFactoryImpl implements ManeuverRaceFingerprintFactory {
-    
     @Override
     public ManeuverRaceFingerprint createFingerprint(TrackedRace trackedRace) {
         return new ManeuverRaceFingerprintImpl(trackedRace);
@@ -18,5 +16,4 @@ public class ManeuverRaceFingerprintFactoryImpl implements ManeuverRaceFingerpri
     public ManeuverRaceFingerprint fromJson(JSONObject json) {
         return new ManeuverRaceFingerprintImpl(json);
     }
-
 }

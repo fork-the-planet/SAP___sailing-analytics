@@ -54,6 +54,13 @@ import com.sap.sse.common.impl.MillisecondsTimePoint;
  *
  */
 public class ManeuverDetectorImpl extends AbstractManeuverDetectorImpl {
+    
+    /**
+     * This CALCULATOR_VERSION variable indicates the Version of the {@link ManeuverDetector} and must be changed
+     * manually when changing the calculator. It should be changed by adding +1;
+     */
+    public static final int DETECTOR_VERSION = 1;
+
 
     private static final Logger logger = Logger.getLogger(ManeuverDetectorImpl.class.getName());
 

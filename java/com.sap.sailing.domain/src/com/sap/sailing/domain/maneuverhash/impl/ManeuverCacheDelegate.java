@@ -1,7 +1,5 @@
 package com.sap.sailing.domain.maneuverhash.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,59 +21,26 @@ public class ManeuverCacheDelegate implements ManeuverCache<Competitor, List<Man
     private final TrackedRaceImpl race;
     private static final Logger logger = Logger.getLogger(ManeuverCacheDelegate.class.getName());
     private final ManeuverRaceFingerprintRegistry maneuverRaceFingerprintRegistry;
-//    private ManeuverCache<Competitor, List<Maneuver>, EmptyUpdateInterval> maneuverCache;
     Map<Competitor, List<Maneuver>> maneuvers = new HashMap<>();
-//    private ManeuverFromDatabase cache;
-//    private SmartFutureCache<Competitor, List<Maneuver>, EmptyUpdateInterval> smartFutureCache; 
     private ManeuverCache<Competitor, List<Maneuver>, EmptyUpdateInterval> cacheToUse;
     
-//    // flag suspended / resume 
-    private boolean cachesSuspended;
-    private boolean triggerManeuverCacheInvalidationForAllCompetitors;
-
     public ManeuverCacheDelegate(TrackedRaceImpl race,
             ManeuverRaceFingerprintRegistry maneuverRaceFingerprintRegistry) {
         super();
         this.race = race;
         this.maneuverRaceFingerprintRegistry = maneuverRaceFingerprintRegistry;
         this.cacheToUse = new ManeuverFromSmartFutureCache((DynamicTrackedRaceImpl) race); 
-//        this.cache = new ManeuverFromDatabase( false, (DynamicTrackedRaceImpl) race, maneuverRaceFingerprintRegistry);
-//        this.smartFutureCache = new SmartFutureCache<Competitor, List<Maneuver>, EmptyUpdateInterval>(
-//                            new AbstractCacheUpdater<Competitor, List<Maneuver>, EmptyUpdateInterval>() {
-//                                @Override
-//                                public List<Maneuver> computeCacheUpdate(Competitor competitor, EmptyUpdateInterval updateInterval)
-//                                        throws NoWindException {
-//                                    return race.getTrackedRegatta().callWithCPUMeterWithException(()->{
-//                                        Duration averageIntervalBetweenRawFixes = race.getTrack(competitor).getAverageIntervalBetweenRawFixes();
-//                                        if (averageIntervalBetweenRawFixes != null) {
-//                                            ManeuverDetector maneuverDetector;
-//                                                maneuverDetector = race.getManeuverDetectorPerCompetitorCache().getValue(competitor);
-//                                               
-//                                            List<Maneuver> maneuvers = race.computeManeuvers(competitor, maneuverDetector);
-//                                            return maneuvers;
-//                                        } else {
-//                                            return Collections.emptyList();
-//                                        }
-//                                    }, CPUMeteringType.MANEUVER_DETECTION.name());
-//                                }
-//                            }, /* nameForLocks */ "Maneuver cache for race " + race.getRace().getName());
     }    
     
     @Override
     public void resume() {
-      
-        // richtigen Ort bestimmen
-//        if (triggerManeuverCacheInvalidationForAllCompetitors) {
-//            triggerManeuverCacheRecalculationForAllCompetitors();
-//        }
-        
         ManeuverRaceFingerprint fingerprint;
         race.getRace().getCourse().lockForRead(); 
         try {
             synchronized (this) {
                 if (maneuverRaceFingerprintRegistry != null) {
                     logger.info("Compare maneuverfingerprints");
-                    race.waitForAllRaceLogsAttacehd();
+                    race.waitForAllRaceLogsAttached();
                     fingerprint = maneuverRaceFingerprintRegistry.getManeuverRaceFingerprint(race.getRaceIdentifier());
                 } else {
                     fingerprint = null;
@@ -83,8 +48,7 @@ public class ManeuverCacheDelegate implements ManeuverCache<Competitor, List<Man
                 if (fingerprint != null && fingerprint.matches(race)) {
                     logger.info("maneuverfingerprints match");
                     maneuvers = maneuverRaceFingerprintRegistry.loadManeuvers(race, race.getRace().getCourse());
-                    // Laden der maneuver um an MFD mitzugeben
-                    cacheToUse = new ManeuverFromDatabase( /*false, (DynamicTrackedRaceImpl) race, maneuverRaceFingerprintRegistry,*/ maneuvers);
+                    cacheToUse = new ManeuverFromDatabase( maneuvers);
                 } else {
                     new Thread(()->{
                         logger.info("maneuverfingerprints do not match");
@@ -128,12 +92,10 @@ public class ManeuverCacheDelegate implements ManeuverCache<Competitor, List<Man
         } finally {
             race.getRace().getCourse().unlockAfterRead();
         }
-        
     }
 
     @Override
     public void triggerUpdate(Competitor competitor, EmptyUpdateInterval updateInterval) {
-        
         race.getRace().getCourse().lockForRead(); 
         try {
             synchronized (this) {
@@ -143,31 +105,5 @@ public class ManeuverCacheDelegate implements ManeuverCache<Competitor, List<Man
         } finally {
             race.getRace().getCourse().unlockAfterRead();
         }
-        
-    
     }
-    
-    
-//    public void triggerManeuverCacheRecalculationForAllCompetitors() {
-//        if (cachesSuspended) {
-//            triggerManeuverCacheInvalidationForAllCompetitors = true;
-//        } else {
-//            final List<Competitor> shuffledCompetitors = new ArrayList<>();
-//            for (Competitor competitor : (race.getRace().getCompetitors())) {
-//                shuffledCompetitors.add(competitor);
-//            }
-//            Collections.shuffle(shuffledCompetitors);
-//            for (Competitor competitor : shuffledCompetitors) {
-//                triggerManeuverCacheRecalculation(competitor);
-//            }
-//        }
-//    }
-//
-//    public void triggerManeuverCacheRecalculation(final Competitor competitor) {
-//        if (cachesSuspended) {
-//            triggerManeuverCacheInvalidationForAllCompetitors = true;
-//        } else {
-//            triggerUpdate(competitor, /* updateInterval */null);
-//        }
-//    }
 }

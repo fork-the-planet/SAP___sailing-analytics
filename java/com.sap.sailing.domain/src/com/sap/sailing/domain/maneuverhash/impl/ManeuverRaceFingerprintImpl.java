@@ -1,9 +1,6 @@
 package com.sap.sailing.domain.maneuverhash.impl;
 
-
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.json.simple.JSONObject;
 
@@ -16,6 +13,7 @@ import com.sap.sailing.domain.common.Wind;
 import com.sap.sailing.domain.common.WindSource;
 import com.sap.sailing.domain.common.tracking.GPSFix;
 import com.sap.sailing.domain.common.tracking.GPSFixMoving;
+import com.sap.sailing.domain.maneuverdetection.impl.ManeuverDetectorImpl;
 import com.sap.sailing.domain.maneuverhash.ManeuverRaceFingerprint;
 import com.sap.sailing.domain.markpassingcalculation.MarkPassingCalculator;
 import com.sap.sailing.domain.tracking.GPSFixTrack;
@@ -39,14 +37,16 @@ public class ManeuverRaceFingerprintImpl implements ManeuverRaceFingerprint {
     private final int numberOfGPSFixes;
     private final int gpsFixesHash;
     private final int windHash;
+    private final int detectorVersion;
 
     private static enum JSON_FIELDS {
         COMPETITOR_HASH, START_OF_TRACKING_AS_MILLIS, END_OF_TRACKING_AS_MILLIS, START_TIME_RECEIVED_AS_MILLIS,
         START_TIME_FROM_RACE_LOG_AS_MILLIS, FINISH_TIME_FROM_RACE_LOG_AS_MILLIS, WAYPOINTS_HASH, NUMBEROFGPSFIXES,
-        GPSFIXES_HASH, RACE_ID, CALCULATOR_VERSION, FIXED_AND_SUPPRESSED_MARK_PASSINGS_FROM_RACE_LOG_HASH, WIND_HASH
+        GPSFIXES_HASH, RACE_ID, CALCULATOR_VERSION, FIXED_AND_SUPPRESSED_MARK_PASSINGS_FROM_RACE_LOG_HASH, WIND_HASH, DETECTOR_VERSION
     };
 
     public ManeuverRaceFingerprintImpl(TrackedRace trackedRace) {
+        this.detectorVersion = ManeuverDetectorImpl.DETECTOR_VERSION;
         this.calculatorVersion = MarkPassingCalculator.CALCULATOR_VERSION;
         this.competitorHash = calculateHashForCompetitors(trackedRace);
         this.startOfTracking = trackedRace.getStartOfTracking();
@@ -80,6 +80,7 @@ public class ManeuverRaceFingerprintImpl implements ManeuverRaceFingerprint {
     }
 
     public ManeuverRaceFingerprintImpl(JSONObject json) {
+        this.detectorVersion =  ((Number) json.get(JSON_FIELDS.DETECTOR_VERSION.name())).intValue();
         this.calculatorVersion = ((Number) json.get(JSON_FIELDS.CALCULATOR_VERSION.name())).intValue();
         this.competitorHash = ((Number) json.get(JSON_FIELDS.COMPETITOR_HASH.name())).intValue();
         this.startOfTracking = TimePoint.of((Long) json.get(JSON_FIELDS.START_OF_TRACKING_AS_MILLIS.name()));
@@ -99,6 +100,7 @@ public class ManeuverRaceFingerprintImpl implements ManeuverRaceFingerprint {
     @Override
     public JSONObject toJson() {
         JSONObject result = new JSONObject();
+        result.put(JSON_FIELDS.DETECTOR_VERSION.name(), detectorVersion);
         result.put(JSON_FIELDS.CALCULATOR_VERSION.name(), calculatorVersion);
         result.put(JSON_FIELDS.COMPETITOR_HASH.name(), competitorHash);
         result.put(JSON_FIELDS.START_OF_TRACKING_AS_MILLIS.name(),
@@ -123,6 +125,8 @@ public class ManeuverRaceFingerprintImpl implements ManeuverRaceFingerprint {
     public boolean matches(TrackedRace trackedRace) {
         final boolean result;
         if (!Util.equalsWithNull(calculatorVersion, MarkPassingCalculator.CALCULATOR_VERSION)) {
+            result = false;
+        }else if (!Util.equalsWithNull(detectorVersion, ManeuverDetectorImpl.DETECTOR_VERSION)) {
             result = false;
         } else if (!Util.equalsWithNull(startOfTracking, trackedRace.getStartOfTracking())) {
             result = false;
@@ -225,9 +229,7 @@ public class ManeuverRaceFingerprintImpl implements ManeuverRaceFingerprint {
     private int calculateWindHash(TrackedRace trackedRace) {
         Set<WindSource> windSoures = trackedRace.getWindSources();
         int res = 0;
-//        String regattaName = trackedRace.getTrackedRegatta().getRegatta().getName();
         Set<WindSource> windSouresToExclude = trackedRace.getWindSourcesToExclude();
-        
         for(WindSource w : windSoures) {
             if(w.getType().isObserved() && !windSouresToExclude.contains(w)) {
                 WindTrack windTrack = trackedRace.getOrCreateWindTrack(w);
@@ -246,16 +248,6 @@ public class ManeuverRaceFingerprintImpl implements ManeuverRaceFingerprint {
 
             }
         }
-//        Map<? extends WindSource, ? extends WindTrack> windTrack = trackedRace.getOrCreateWindTrack(null)
-//        Map<WindSource, WindTrack> gefilterteMap = windTrack.entrySet()
-//                .stream().filter(entry -> entry.getKey().getType().isObserved())
-//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-//        for (Map.Entry<? extends WindSource, ? extends WindTrack> w : gefilterteMap.entrySet() ) {
-//            int k = w.getKey().hashCode();
-//            int v = w.getValue().hashCode();
-//            res = res ^ k;
-//            res = res ^ v;
-//        }
         return res;
     }
 
@@ -264,6 +256,7 @@ public class ManeuverRaceFingerprintImpl implements ManeuverRaceFingerprint {
         final int prime = 31;
         int result = 1;
         result = prime * result + calculatorVersion;
+        result = prime * result + detectorVersion;
         result = prime * result + competitorHash;
         result = prime * result + ((endOfTracking == null) ? 0 : endOfTracking.hashCode());
         result = prime * result + ((finishTimeFromRaceLog == null) ? 0 : finishTimeFromRaceLog.hashCode());
@@ -288,6 +281,8 @@ public class ManeuverRaceFingerprintImpl implements ManeuverRaceFingerprint {
             return false;
         ManeuverRaceFingerprintImpl other = (ManeuverRaceFingerprintImpl) obj;
         if (calculatorVersion != other.calculatorVersion)
+            return false;
+        if (detectorVersion != other.detectorVersion)
             return false;
         if (competitorHash != other.competitorHash)
             return false;
