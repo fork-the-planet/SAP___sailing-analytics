@@ -3331,7 +3331,7 @@ public class DomainObjectFactoryImpl implements DomainObjectFactory {
     public Map<Competitor, List<Maneuver>> loadManeuvers(TrackedRace trackedRace, Course course) {
         final Map<Competitor, List<Maneuver>> result;
         final Document query = new Document();
-        RaceIdentifier raceIdentifier = trackedRace.getRaceIdentifier();
+        final RaceIdentifier raceIdentifier = trackedRace.getRaceIdentifier();
         addRaceIdentifierToQuery(query, raceIdentifier);
         final MongoCollection<Document> maneuversCollection = database.getCollection(CollectionNames.MANEUVERS.name());
         final Document doc = maneuversCollection.find(query).first();
@@ -3341,8 +3341,8 @@ public class DomainObjectFactoryImpl implements DomainObjectFactory {
             for (final Document maneuversForOneCompetitorDoc : maneuversDoc) {
                 final Serializable competitorId = maneuversForOneCompetitorDoc.get(FieldNames.COMPETITOR_ID.name(), Serializable.class);
                 final Competitor competitor = baseDomainFactory.getExistingCompetitorById(competitorId);
-                for (final Document maneuvers : maneuversForOneCompetitorDoc.getList(FieldNames.MANEUVERS.name(), Document.class)) {
-                    final Maneuver maneuver = loadManeuver(competitor, maneuvers, course, trackedRace);
+                for (final Document maneuverDoc : maneuversForOneCompetitorDoc.getList(FieldNames.MANEUVERS.name(), Document.class)) {
+                    final Maneuver maneuver = loadManeuver(competitor, maneuverDoc, course, trackedRace);
                     result.computeIfAbsent(competitor, c -> new ArrayList<>()).add(maneuver);     
                 }
             }
@@ -3352,20 +3352,20 @@ public class DomainObjectFactoryImpl implements DomainObjectFactory {
         return result;
     }
     
-    private Maneuver loadManeuver(Competitor competitor, Document maneuvers, Course course, TrackedRace trackedRace) {
-        final TimePoint timePoint = TimePoint.of( maneuvers.getLong(FieldNames.TIMEPOINT.name()));
-        final double maxTurningRateInDegreesPerSecond = maneuvers.getDouble(FieldNames.MAX_TURNING_RATE_IN_DEGREE_PER_SECOUND.name());
-        final String typeName =  maneuvers.getString(FieldNames.TYPE.name());
+    private Maneuver loadManeuver(Competitor competitor, Document maneuverDoc, Course course, TrackedRace trackedRace) {
+        final TimePoint timePoint = TimePoint.of( maneuverDoc.getLong(FieldNames.TIMEPOINT.name()));
+        final double maxTurningRateInDegreesPerSecond = maneuverDoc.getDouble(FieldNames.MAX_TURNING_RATE_IN_DEGREE_PER_SECOUND.name());
+        final String typeName =  maneuverDoc.getString(FieldNames.TYPE.name());
         final ManeuverType type = ManeuverType.valueOf(typeName);
-        final String newTackName =  maneuvers.getString(FieldNames.TACK.name());
+        final String newTackName =  maneuverDoc.getString(FieldNames.TACK.name());
         final Tack newTack = Tack.valueOf(newTackName);
-        final int waypointIndex = maneuvers.getInteger(FieldNames.INDEX_OF_PASSED_WAYPOINT.name());
-        final double positionLatRad = maneuvers.getDouble(FieldNames.POSITION_LAT_RAD.name());
-        final double positionLngRad = maneuvers.getDouble(FieldNames.POSITION_LNG_RAD.name());
+        final int waypointIndex = maneuverDoc.getInteger(FieldNames.INDEX_OF_PASSED_WAYPOINT.name());
+        final double positionLatRad = maneuverDoc.getDouble(FieldNames.POSITION_LAT_RAD.name());
+        final double positionLngRad = maneuverDoc.getDouble(FieldNames.POSITION_LNG_RAD.name());
         final Position position = new RadianPosition(positionLatRad, positionLngRad);
-        final ManeuverCurveBoundaries mainCurveBoundaries = loadManeuverCurveBoundaries((Document) maneuvers.get(FieldNames.MAIN_CURVE_BOUNDARIES.name()));
-        final ManeuverCurveBoundaries maneuverCurveWithStableSpeedAndCourseBoundaries = loadManeuverCurveBoundaries((Document) maneuvers.get(FieldNames.MANEUVER_CURVE_WITH_STABLE_SPEED_AND_COURSE_BOUNDERIES.name())); 
-        final ManeuverLoss maneuverLoss = loadManeuverLoss((Document) maneuvers.get(FieldNames.MANEUVER_LOSS.name()));
+        final ManeuverCurveBoundaries mainCurveBoundaries = loadManeuverCurveBoundaries((Document) maneuverDoc.get(FieldNames.MAIN_CURVE_BOUNDARIES.name()));
+        final ManeuverCurveBoundaries maneuverCurveWithStableSpeedAndCourseBoundaries = loadManeuverCurveBoundaries((Document) maneuverDoc.get(FieldNames.MANEUVER_CURVE_WITH_STABLE_SPEED_AND_COURSE_BOUNDERIES.name())); 
+        final ManeuverLoss maneuverLoss = loadManeuverLoss((Document) maneuverDoc.get(FieldNames.MANEUVER_LOSS.name()));
         final MarkPassingProxy markPassingProxy = new MarkPassingProxy(timePoint,  waypointIndex, competitor.getId(), trackedRace );// wie kommt man auf das Race?
         final Maneuver maneuver;
         if (waypointIndex == -1) {
@@ -3404,23 +3404,25 @@ public class DomainObjectFactoryImpl implements DomainObjectFactory {
         return maneuverLoss;
     }
 
-    private ManeuverCurveBoundaries loadManeuverCurveBoundaries(Document maneuvers) {
-        final TimePoint timePointBefore = TimePoint.of( maneuvers.getLong(FieldNames.TIMEPOINT_BEFORE.name()));
-        final TimePoint timePointAfter = TimePoint.of( maneuvers.getLong(FieldNames.TIMEPOINT_AFTER.name()));
-        final Double SpeedWithBearingBeforeDegrees =  maneuvers.getDouble(FieldNames.SPEED_WITH_BEARING_BEFORE_DEGREES.name());
-        final Double SpeedWithBearingBeforeSpeed = maneuvers.getDouble(FieldNames.SPEED_WITH_BEARING_BEFORE_SPEED.name());
+    private ManeuverCurveBoundaries loadManeuverCurveBoundaries(Document document) {
+        final TimePoint timePointBefore = TimePoint.of(document.getLong(FieldNames.TIMEPOINT_BEFORE.name()));
+        final TimePoint timePointAfter = TimePoint.of(document.getLong(FieldNames.TIMEPOINT_AFTER.name()));
+        final Double SpeedWithBearingBeforeDegrees = document.getDouble(FieldNames.SPEED_WITH_BEARING_BEFORE_DEGREES.name());
+        final Double SpeedWithBearingBeforeSpeed = document.getDouble(FieldNames.SPEED_WITH_BEARING_BEFORE_SPEED.name());
         final Bearing bearingBefore = new DegreeBearingImpl(SpeedWithBearingBeforeDegrees);
         final SpeedWithBearing SpeedWithBearingBefore = new KnotSpeedWithBearingImpl(SpeedWithBearingBeforeSpeed, bearingBefore);
-        final Double SpeedWithBearingAfterDegrees =  maneuvers.getDouble(FieldNames.SPEED_WITH_BEARING_AFTER_DEGREES.name());
-        final Double SpeedWithBearingAfterSpeed = maneuvers.getDouble(FieldNames.SPEED_WITH_BEARING_AFTER_SPEED.name());
+        final Double SpeedWithBearingAfterDegrees = document.getDouble(FieldNames.SPEED_WITH_BEARING_AFTER_DEGREES.name());
+        final Double SpeedWithBearingAfterSpeed = document.getDouble(FieldNames.SPEED_WITH_BEARING_AFTER_SPEED.name());
         final Bearing bearingAfter = new DegreeBearingImpl(SpeedWithBearingAfterSpeed);
         final SpeedWithBearing SpeedWithBearingAfter = new KnotSpeedWithBearingImpl(SpeedWithBearingAfterDegrees, bearingAfter);
-        final double directionChangeInDegrees =  maneuvers.getDouble(FieldNames.DIRECTION_CHANGE_IN_DEGREES.name());
-        final double lowestSpeedDouble =  maneuvers.getDouble(FieldNames.LOWEST_SPEED.name());
+        final double directionChangeInDegrees = document.getDouble(FieldNames.DIRECTION_CHANGE_IN_DEGREES.name());
+        final double lowestSpeedDouble = document.getDouble(FieldNames.LOWEST_SPEED.name());
         final Speed lowestSpeed = new KnotSpeedImpl(lowestSpeedDouble);
-        final double highestSpeedDouble =  maneuvers.getDouble(FieldNames.HIGHEST_SPEED.name());
+        final double highestSpeedDouble = document.getDouble(FieldNames.HIGHEST_SPEED.name());
         final Speed highestSpeed = new KnotSpeedImpl(highestSpeedDouble);
-        ManeuverCurveBoundaries maneuverCurveBoundaries = new ManeuverCurveBoundariesImpl(timePointBefore, timePointAfter, SpeedWithBearingBefore, SpeedWithBearingAfter, directionChangeInDegrees, lowestSpeed, highestSpeed );
+        ManeuverCurveBoundaries maneuverCurveBoundaries = new ManeuverCurveBoundariesImpl(timePointBefore,
+                timePointAfter, SpeedWithBearingBefore, SpeedWithBearingAfter, directionChangeInDegrees, lowestSpeed,
+                highestSpeed);
         return maneuverCurveBoundaries;
     }
 }
