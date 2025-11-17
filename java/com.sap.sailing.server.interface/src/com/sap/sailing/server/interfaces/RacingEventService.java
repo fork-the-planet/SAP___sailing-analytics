@@ -157,7 +157,8 @@ import com.sap.sse.shared.media.VideoDescriptor;
  * @author Axel Uhl (d043530)
  *
  */
-public interface RacingEventService extends TrackedRegattaRegistry, RegattaFetcher, RegattaRegistry, MarkPassingRaceFingerprintRegistry, ManeuverRaceFingerprintRegistry, 
+public interface RacingEventService extends TrackedRegattaRegistry, RegattaFetcher, RegattaRegistry,
+        MarkPassingRaceFingerprintRegistry, ManeuverRaceFingerprintRegistry, 
         RaceFetcher, LeaderboardRegistry, EventResolver, LeaderboardGroupResolver, TrackerManager,
         Searchable<LeaderboardSearchResult, KeywordQueryWithOptionalEventQualification>,
         ReplicableWithObjectInputStream<RacingEventService, RacingEventServiceOperation<?>>, RaceLogAndTrackedRaceResolver,

@@ -474,7 +474,7 @@ Replicator {
     private final ConcurrentHashMap<UUID, LeaderboardGroup> leaderboardGroupsByID;
 
     private final ConcurrentHashMap<RaceIdentifier, MarkPassingRaceFingerprint> markPassingRaceFingerprints;
-    
+
     private final ConcurrentHashMap<RaceIdentifier, ManeuverRaceFingerprint> maneuverRaceFingerprints;
 
     /**
@@ -1011,7 +1011,7 @@ Replicator {
     
     @Override
     public ManeuverRaceFingerprint getManeuverRaceFingerprint(RaceIdentifier raceIdentifier) {
-        logger.log(Level.INFO, "Getting Maneuver fingerprint");
+        logger.fine(()->"Getting Maneuver fingerprint for race "+raceIdentifier);
         return maneuverRaceFingerprints.get(raceIdentifier);
     }
     

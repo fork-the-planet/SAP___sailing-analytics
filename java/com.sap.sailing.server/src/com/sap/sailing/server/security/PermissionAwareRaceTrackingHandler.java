@@ -107,13 +107,14 @@ public class PermissionAwareRaceTrackingHandler extends DefaultRaceTrackingHandl
             long millisecondsOverWhichToAverageWind, long millisecondsOverWhichToAverageSpeed,
             DynamicRaceDefinitionSet raceDefinitionSetToUpdate, boolean useMarkPassingCalculator,
             RaceLogAndTrackedRaceResolver raceLogResolver, Optional<ThreadLocalTransporter> threadLocalTransporter,
-            TrackingConnectorInfo trackingConnectorInfo, MarkPassingRaceFingerprintRegistry markPassingRaceFingerprintRegistry, ManeuverRaceFingerprintRegistry maneuverRaceFingerprintRegistry) {
+            TrackingConnectorInfo trackingConnectorInfo, MarkPassingRaceFingerprintRegistry markPassingRaceFingerprintRegistry,
+            ManeuverRaceFingerprintRegistry maneuverRaceFingerprintRegistry) {
         return setOwnershipForRace(
                 new RegattaNameAndRaceName(trackedRegatta.getRegatta().getName(), raceDefinition.getName()),
                 () -> super.createTrackedRace(trackedRegatta, raceDefinition, sidelines, windStore, delayToLiveInMillis,
                         millisecondsOverWhichToAverageWind, millisecondsOverWhichToAverageSpeed,
                         raceDefinitionSetToUpdate, useMarkPassingCalculator, raceLogResolver, threadLocalTransporter,
-                        trackingConnectorInfo, markPassingRaceFingerprintRegistry,maneuverRaceFingerprintRegistry));
+                        trackingConnectorInfo, markPassingRaceFingerprintRegistry, maneuverRaceFingerprintRegistry));
     }
 
     @Override
