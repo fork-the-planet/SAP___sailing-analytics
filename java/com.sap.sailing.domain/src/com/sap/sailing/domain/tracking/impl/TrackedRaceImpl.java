@@ -2919,8 +2919,8 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
      */
     @Override
     public Iterable<Maneuver> getManeuvers(Competitor competitor, TimePoint from, TimePoint to, boolean waitForLatest) {
-        List<Maneuver> allManeuvers = (List<Maneuver>) maneuverCache.get(competitor, waitForLatest);
-        List<Maneuver> result;
+        final List<Maneuver> allManeuvers = maneuverCache.get(competitor, waitForLatest);
+        final List<Maneuver> result;
         if (allManeuvers == null) {
             result = Collections.emptyList();
         } else {
@@ -2931,8 +2931,8 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
 
     @Override
     public Iterable<Maneuver> getManeuvers(Competitor competitor, boolean waitForLatest) {
-        List<Maneuver> allManeuvers = (List<Maneuver>) maneuverCache.get(competitor, waitForLatest);
-        List<Maneuver> result;
+        final List<Maneuver> allManeuvers = maneuverCache.get(competitor, waitForLatest);
+        final List<Maneuver> result;
         if (allManeuvers == null) {
             result = Collections.emptyList();
         } else {
