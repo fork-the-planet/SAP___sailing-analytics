@@ -1418,8 +1418,4 @@ public class MockedTrackedRace implements DynamicTrackedRace {
             WindLegTypeAndLegBearingAndORCPerformanceCurveCache cache) {
         return null;
     }
-
-    @Override
-    public void updateManeuvers(Competitor competitor, Iterable<Maneuver> maneuvers) {
-    }
 }

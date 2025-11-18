@@ -1,24 +1,12 @@
 package com.sap.sailing.domain.maneuverhash;
 
+import com.sap.sailing.domain.base.Competitor;
+import com.sap.sailing.domain.tracking.Maneuver;
+import com.sap.sailing.domain.tracking.RaceFingerprint;
 
-import org.json.simple.JSONObject;
-
-import com.sap.sailing.domain.tracking.TrackedRace;
-
-public interface ManeuverRaceFingerprint {
-    
-    /**
-     * Returns a {@link JSONObject} of the hash values.
-     */
-    JSONObject toJson();
-
-    /**
-     * Incrementally computes the composite fingerprint of the {@code trackedRace} and compares to this fingerprint
-     * component by component. The fingerprint components are computed in ascending order of computational complexity,
-     * trying to fail early / fast.<p>
-     * 
-     * @return {@code true} if the {@code trackedRace} produces a fingerprint equal to this one if passed to
-     *         {@link ManeuverRaceFingerprintFactory#createFingerprint(TrackedRace)}
-     */
-    boolean matches(TrackedRace trackedRace);
+/**
+ * Contains fingerprint data that encodes the state of the race relevant for computing all {@link Maneuver}s
+ * for all {@link Competitor}s.
+ */
+public interface ManeuverRaceFingerprint extends RaceFingerprint {
 }

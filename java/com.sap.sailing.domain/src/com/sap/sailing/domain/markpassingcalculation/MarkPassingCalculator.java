@@ -461,8 +461,7 @@ public class MarkPassingCalculator {
                 fixesForCompetitor.addAll(competitorEntry.getValue());
             }
             if (!newMarkFixes.isEmpty()) {
-                // FIXME bug 2745 use new mark fixes to invalidate chooser's mark position and mutual mark/waypoint
-                // distance cache
+                // FIXME bug 2745 use new mark fixes to invalidate chooser's mark position and mutual mark/waypoint distance cache
                 for (Entry<Competitor, List<GPSFixMoving>> fixesAffectedByNewMarkFixes : finder
                         .calculateFixesAffectedByNewMarkFixes(newMarkFixes).entrySet()) {
                     Collection<GPSFixMoving> fixes = combinedCompetitorFixesFinderConsidersAffected
@@ -614,7 +613,7 @@ public class MarkPassingCalculator {
                             try {
                                 latchForRunningListenRun.await();
                                 final Map<Competitor, Map<Waypoint, MarkPassing>> markPassings = race.getMarkPassings(/* waitForLatestUpdates */ true);
-                                // Bei Live-Rennen Speicherung unnötig
+                                // TODO bug6182: do we need to store when we can assume that the race is still live? How to find out reliably?
                                 markPassingRaceFingerprintRegistry.storeMarkPassings(race.getRaceIdentifier(),
                                         MarkPassingRaceFingerprintFactory.INSTANCE.createFingerprint(race),
                                         markPassings, race.getRace().getCourse());

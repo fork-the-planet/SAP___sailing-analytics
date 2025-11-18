@@ -8,19 +8,27 @@ import java.util.logging.Logger;
 import com.sap.sailing.domain.base.Competitor;
 import com.sap.sailing.domain.maneuverhash.ManeuverCache;
 import com.sap.sailing.domain.tracking.Maneuver;
+import com.sap.sailing.domain.tracking.TrackedRace;
 import com.sap.sse.util.SmartFutureCache.EmptyUpdateInterval;
 
+/**
+ * Stores a {@link TrackedRace}'s {@link Maneuver}s after they were loaded successfully from the persistent store.
+ * This happens when a race was considered equal regarding its "fingerprint" to a version loaded previously with
+ * all maneuvers computed and stored persistently. This saves the computational effort to compute the maneuvers
+ * again (persistent caching).<p>
+ * 
+ * This class collaborates with {@link ManeuverCacheDelegate}.
+ */
 public class ManeuversFromDatabase implements ManeuverCache<Competitor, List<Maneuver>, EmptyUpdateInterval> {
-    
+    boolean suspended;
+    private static final Logger logger = Logger.getLogger(ManeuversFromDatabase.class.getName());
+    private final Map<Competitor, List<Maneuver>> maneuvers;
+
     public ManeuversFromDatabase(
              Map<Competitor, List<Maneuver>> maneuvers) {
         super();
         this.maneuvers = maneuvers;
     }
-
-    boolean suspended;
-    private static final Logger logger = Logger.getLogger(ManeuversFromDatabase.class.getName());
-    private final Map<Competitor, List<Maneuver>> maneuvers;
 
     public void resume() {
         logger.log(Level.WARNING, "Method should never be called");
