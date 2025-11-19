@@ -104,7 +104,7 @@ public class WhitelabelTest extends AbstractSeleniumTest {
         HomePage homePage = HomePage.goToPage(getWebDriver(), getContextRoot());
         assertThat(homePage.getPageTitle(), not(containsString("SAP")));
         validateIsDisplayed(homePage.getFavicon(), false);
-        validateIsDisplayed(homePage.getSolutionsPageLink(), false);
+        validateIsDisplayed(homePage.getSolutionsPageLink(), true); // Solutions is de-branded in its contents, so we can show the tab to it even when de-branded
         validateIsDisplayed(homePage.getSapSailingHeaderImage(), false);
         assertThat(homePage.getLogoAnchor().getAttribute("target"), equalTo(""));
         validateIsDisplayed(homePage.getSocialmediaFooter(), false);
