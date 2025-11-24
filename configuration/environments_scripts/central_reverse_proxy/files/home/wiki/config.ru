@@ -28,11 +28,6 @@
 #use Gollum::Auth, users, options
 #
 ## That's it. The rest is for gollum only.
-#gollum_path = "/home/wiki/gitwiki"
-#wiki_options = {:universal_toc => false}
-#Precious::App.set(:gollum_path, gollum_path)
-#Precious::App.set(:wiki_options, wiki_options)
-#run Precious::App
 
 require 'rubygems'
 require 'gollum/app'
@@ -57,12 +52,3 @@ Precious::App.set(:loggedInUserEmail, "wiki@sapsailing.com");
 App.set(:default_markup, :markdown) # set your favorite markup language
 run App
 
-#require 'rubygems'
-#require 'gollum/app'
-#
-#gollum_path = "/home/wiki/gitwiki"
-#wiki_options = {:universal_toc => false}
-#Precious::App.set(:gollum_path, gollum_path)
-#Precious::App.set(:default_markup, :markdown) # set your favorite markup language
-#Precious::App.set(:wiki_options, wiki_options)
-#run Precious::App
