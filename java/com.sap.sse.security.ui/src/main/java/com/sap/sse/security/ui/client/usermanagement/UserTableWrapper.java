@@ -32,6 +32,8 @@ import com.sap.sse.common.Util;
 import com.sap.sse.common.util.NaturalComparator;
 import com.sap.sse.gwt.client.DateAndTimeFormatterUtil;
 import com.sap.sse.gwt.client.ErrorReporter;
+import com.sap.sse.gwt.client.Notification;
+import com.sap.sse.gwt.client.Notification.NotificationType;
 import com.sap.sse.gwt.client.celltable.AbstractSortableTextColumn;
 import com.sap.sse.gwt.client.celltable.CellTableWithCheckboxResources;
 import com.sap.sse.gwt.client.celltable.EntityIdentityComparator;
@@ -259,7 +261,7 @@ extends TableWrapper<UserDTO, S, StringMessages, TR> {
                     getUserManagementWriteService().unlockUser(userName, new AsyncCallback<SuccessInfo>() {
                         @Override
                         public void onSuccess(SuccessInfo result) {
-                            Window.alert(stringMessages.unlockSucceededForUser(userName));
+                            Notification.notify(stringMessages.unlockSucceededForUser(userName), NotificationType.SUCCESS);
                             final List<UserDTO> usersWithUpdatedEntry = new ArrayList<UserDTO>();
                             for (UserDTO user : getAllUsers()) {
                                 if (user.getFullName() == selectedUser.getFullName()) {
@@ -273,13 +275,13 @@ extends TableWrapper<UserDTO, S, StringMessages, TR> {
 
                         @Override
                         public void onFailure(Throwable caught) {
-                            Window.alert(stringMessages.unlockFailedForUser(userName));
+                            Notification.notify(stringMessages.unlockFailedForUser(userName), NotificationType.ERROR);
                             errorReporter.reportError(caught.getMessage());
                         }
                     });
                 }
             } else {
-                Window.alert(stringMessages.userIsAlreadyUnlocked());
+                Notification.notify(stringMessages.userIsAlreadyUnlocked(), NotificationType.INFO);
             }
         };
     }
