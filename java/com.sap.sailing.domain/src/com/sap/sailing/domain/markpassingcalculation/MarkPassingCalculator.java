@@ -63,8 +63,8 @@ public class MarkPassingCalculator {
     private CandidateChooser chooser;
     private static final Logger logger = Logger.getLogger(MarkPassingCalculator.class.getName());
     private final MarkPassingUpdateListener listener;
-    private final static ExecutorService executor = ThreadPoolUtil.INSTANCE
-            .getDefaultBackgroundTaskThreadPoolExecutor();
+    private final static ExecutorService executor = ThreadPoolUtil.INSTANCE.getDefaultBackgroundTaskThreadPoolExecutor();
+    private final static ExecutorService initializationExecutor = ThreadPoolUtil.INSTANCE.createBackgroundTaskThreadPoolExecutor("MarkPassingCalculator initializations");
     private final LinkedBlockingQueue<StorePositionUpdateStrategy> queue;
 
     /**
@@ -149,7 +149,7 @@ public class MarkPassingCalculator {
         } else {
             listen = null;
         }
-        Thread t = new Thread(() -> {
+        final Runnable waitForInitialization = () -> {
             final Set<Callable<Void>> tasks = new HashSet<>();
             for (Competitor c : race.getRace().getCompetitors()) {
                 tasks.add(race.getTrackedRegatta().cpuMeterCallable(() -> {
@@ -173,11 +173,11 @@ public class MarkPassingCalculator {
                     }
                 }
             }
-        }, "MarkPassingCalculator for race " + race.getRaceIdentifier() + " initialization");
+        };
         if (waitForInitialMarkPassingCalculation) {
-            t.run();
+            waitForInitialization.run();
         } else {
-            t.start();
+            initializationExecutor.submit(waitForInitialization);
         }
     }
 
