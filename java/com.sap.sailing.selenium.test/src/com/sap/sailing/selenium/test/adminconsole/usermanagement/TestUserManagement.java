@@ -110,7 +110,7 @@ public class TestUserManagement extends AbstractSeleniumTest {
         createUser(userManagementPanel);
         // logout so test user can login
         AuthenticationMenuPO authenticationMenu = logoutAndGoToAdminConsolePage().getAuthenticationMenu();
-        attemptAbusiveLogins(TEST_USER_NAME, "wrongPassword", 5, authenticationMenu);
+        attemptAbusiveLogins(TEST_USER_NAME, "wrongPassword", 6, authenticationMenu);
         // 16s lock window in place now, sufficient to log into admin, unlock user
         // and return till test user can login, within the erstwhile lock window
         assertTrue(authenticationMenu.attemptLogin("admin", "admin"));

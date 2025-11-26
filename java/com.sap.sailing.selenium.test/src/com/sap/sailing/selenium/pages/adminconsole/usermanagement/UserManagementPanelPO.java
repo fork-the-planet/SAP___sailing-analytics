@@ -187,6 +187,9 @@ public class UserManagementPanelPO extends PageArea {
             final WebElement action = ActionsHelper.findUnlockAction(entry.getWebElement());
             action.click();
         }
+        waitUntilAlertIsPresent();
+        driver.switchTo().alert().accept();
+        waitForAjaxRequests();
     }
 
     public void waitUntilUserFound(String userName) {
