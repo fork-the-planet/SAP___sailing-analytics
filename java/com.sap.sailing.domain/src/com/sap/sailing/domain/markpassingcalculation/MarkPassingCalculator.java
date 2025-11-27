@@ -590,18 +590,18 @@ public class MarkPassingCalculator {
                     suspended = false;
                 } else {
                     suspended = false;
-                    if (markPassingRaceFingerprintRegistry != null) {
-                        enqueueUpdate(new StorePositionUpdateStrategy() {
-                            @Override
-                            public void storePositionUpdate(Map<Competitor, List<GPSFixMoving>> competitorFixes,
-                                    Map<Competitor, List<GPSFixMoving>> competitorFixesThatReplacedExistingOnes,
-                                    Map<Mark, List<GPSFix>> markFixes, List<Waypoint> addedWaypoints,
-                                    List<Waypoint> removedWaypoints, IntHolder smallestChangedWaypointIndex,
-                                    List<Triple<Competitor, Integer, TimePoint>> fixedMarkPassings,
-                                    List<Pair<Competitor, Integer>> removedMarkPassings,
-                                    List<Pair<Competitor, Integer>> suppressedMarkPassings,
-                                    List<Competitor> unSuppressedMarkPassings, CandidateFinder candidateFinder,
-                                    CandidateChooser candidateChooser) {
+                    enqueueUpdate(new StorePositionUpdateStrategy() {
+                        @Override
+                        public void storePositionUpdate(Map<Competitor, List<GPSFixMoving>> competitorFixes,
+                                Map<Competitor, List<GPSFixMoving>> competitorFixesThatReplacedExistingOnes,
+                                Map<Mark, List<GPSFix>> markFixes, List<Waypoint> addedWaypoints,
+                                List<Waypoint> removedWaypoints, IntHolder smallestChangedWaypointIndex,
+                                List<Triple<Competitor, Integer, TimePoint>> fixedMarkPassings,
+                                List<Pair<Competitor, Integer>> removedMarkPassings,
+                                List<Pair<Competitor, Integer>> suppressedMarkPassings,
+                                List<Competitor> unSuppressedMarkPassings, CandidateFinder candidateFinder,
+                                CandidateChooser candidateChooser) {
+                            if (markPassingRaceFingerprintRegistry != null) {
                                 initializationExecutor.submit(()->{
                                     final Map<Competitor, Map<Waypoint, MarkPassing>> markPassings = race.getMarkPassings(/* waitForLatestUpdates */ true);
                                     markPassingRaceFingerprintRegistry.storeMarkPassings(race.getRaceIdentifier(),
@@ -609,8 +609,8 @@ public class MarkPassingCalculator {
                                             markPassings, race.getRace().getCourse());
                                 });
                             }
-                        });
-                    }
+                        }
+                    });
                 }
             }
         } finally {
