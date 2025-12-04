@@ -97,7 +97,7 @@ public class ManeuverCacheDelegate implements SerializableManeuverCache {
                     }
                     maneuverRaceFingerprintRegistry.storeManeuvers(race.getRaceIdentifier(), ManeuverRaceFingerprintFactory.INSTANCE.createFingerprint(race), maneuvers, race.getRace().getCourse());
                 }
-            }, "Waiting for mark passings for "+race.getName()+" after having resumed to store the results in registry")
+            }, "Waiting for maneuvers for "+race.getName()+" after having resumed to store the results in registry")
             .start();
         }
     }
