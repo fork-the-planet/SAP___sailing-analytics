@@ -350,7 +350,7 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
      * maintain state to accelerate the {@link #approximate(Competitor, Distance, TimePoint, TimePoint)} method, also in
      * live scenarios when the contents of the competitors' {@link #tracks} changes dynamically.
      */
-    private final Map<Competitor, CourseChangeBasedTrackApproximation> maneuverApproximators;
+    private final ConcurrentMap<Competitor, CourseChangeBasedTrackApproximation> maneuverApproximators;
 
     private transient ConcurrentMap<TimePoint, Future<Wind>> directionFromStartToNextMarkCache;
 
@@ -585,12 +585,11 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
         }
         markPassingsForCompetitor = new HashMap<>();
         tracks = new HashMap<>();
-        maneuverApproximators = new HashMap<>();
+        maneuverApproximators = new ConcurrentHashMap<>();
         for (Competitor competitor : race.getCompetitors()) {
             markPassingsForCompetitor.put(competitor, new ConcurrentSkipListSet<MarkPassing>(MarkPassingByTimeComparator.INSTANCE));
             final DynamicGPSFixMovingTrackImpl<Competitor> track = new DynamicGPSFixMovingTrackImpl<Competitor>(competitor, millisecondsOverWhichToAverageSpeed);
             tracks.put(competitor, track);
-            maneuverApproximators.put(competitor, new CourseChangeBasedTrackApproximation(track, race.getBoatOfCompetitor(competitor).getBoatClass()));
         }
         markPassingsForWaypoint = new ConcurrentHashMap<Waypoint, NavigableSet<MarkPassing>>();
         for (Waypoint waypoint : race.getCourse().getWaypoints()) {
@@ -2863,7 +2862,9 @@ public abstract class TrackedRaceImpl extends TrackedRaceWithWindEssentials impl
 
     @Override
     public Iterable<GPSFixMoving> approximate(Competitor competitor, Distance maxDistance, TimePoint from, TimePoint to) {
-        return maneuverApproximators.get(competitor).approximate(from, to);
+        return maneuverApproximators.computeIfAbsent(competitor,
+                c->new CourseChangeBasedTrackApproximation(getTrack(c), race.getBoatOfCompetitor(c).getBoatClass()))
+                .approximate(from, to);
     }
     
     private void ensureManeuverCacheIsFilledForAllCompetitors() {
