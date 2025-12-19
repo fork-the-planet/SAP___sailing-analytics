@@ -167,7 +167,7 @@ public class RoleDefinitionsPanel extends VerticalPanel {
     private FlushableCellTable<RoleDefinitionDTO> createRoleDefinitionsTable(CellTableWithCheckboxResources tableResources) {
         final FlushableCellTable<RoleDefinitionDTO> table = new FlushableCellTable<>(/* pageSize */ 50, tableResources);
         rolesListDataProvider.addDataDisplay(table);
-        SelectionCheckboxColumn<RoleDefinitionDTO> roleSelectionCheckboxColumn = new SelectionCheckboxColumn<RoleDefinitionDTO>(
+        final SelectionCheckboxColumn<RoleDefinitionDTO> roleSelectionCheckboxColumn = new SelectionCheckboxColumn<RoleDefinitionDTO>(
                 tableResources.cellTableStyle().cellTableCheckboxSelected(),
                 tableResources.cellTableStyle().cellTableCheckboxDeselected(),
                 tableResources.cellTableStyle().cellTableCheckboxColumnCell(), new EntityIdentityComparator<RoleDefinitionDTO>() {
@@ -180,13 +180,13 @@ public class RoleDefinitionsPanel extends VerticalPanel {
                         return t.getId().hashCode();
                     }
                 }, filterablePanelRoleDefinitions.getAllListDataProvider(), table);
-        ListHandler<RoleDefinitionDTO> columnSortHandler = new ListHandler<>(rolesListDataProvider.getList());
+        final ListHandler<RoleDefinitionDTO> columnSortHandler = new ListHandler<>(rolesListDataProvider.getList());
         table.addColumnSortHandler(columnSortHandler);
         columnSortHandler.setComparator(roleSelectionCheckboxColumn, roleSelectionCheckboxColumn.getComparator());
         final TextColumn<RoleDefinitionDTO> roleDefinitionUUidColumn = new AbstractSortableTextColumn<RoleDefinitionDTO>(
                 role -> role.getId() == null ? "<null>" : role.getId().toString(), columnSortHandler);
-        TextColumn<RoleDefinitionDTO> roleDefinitionNameColumn = new AbstractSortableTextColumn<RoleDefinitionDTO>(role->role.getName(), columnSortHandler);
-        Column<RoleDefinitionDTO, SafeHtml> permissionsColumn = new Column<RoleDefinitionDTO, SafeHtml>(new SafeHtmlCell()) {
+        final TextColumn<RoleDefinitionDTO> roleDefinitionNameColumn = new AbstractSortableTextColumn<RoleDefinitionDTO>(role->role.getName(), columnSortHandler);
+        final Column<RoleDefinitionDTO, SafeHtml> permissionsColumn = new Column<RoleDefinitionDTO, SafeHtml>(new SafeHtmlCell()) {
             @Override
             public SafeHtml getValue(RoleDefinitionDTO role) {
                 SafeHtmlBuilder builder = new SafeHtmlBuilder();
@@ -207,7 +207,6 @@ public class RoleDefinitionsPanel extends VerticalPanel {
                 return new NaturalComparator().compare(r1.getPermissions().toString(), r2.getPermissions().toString());
             }
         });
-        
         final HasPermissions type = SecuredSecurityTypes.ROLE_DEFINITION;
         final AccessControlledActionsColumn<RoleDefinitionDTO, DefaultActionsImagesBarCell> roleActionColumn = create(
                 new DefaultActionsImagesBarCell(stringMessages), userService);
@@ -226,16 +225,16 @@ public class RoleDefinitionsPanel extends VerticalPanel {
         roleActionColumn.addAction(DefaultActionsImagesBarCell.ACTION_CHANGE_ACL, DefaultActions.CHANGE_ACL,
                 configACL::openDialog);
         roleSelectionCheckboxColumn.setSortable(false);
-        CheckboxCell selectAllCell = new CheckboxCell();
-        Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
+        final CheckboxCell selectAllCell = new CheckboxCell();
+        final Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
                     @Override
                     public Boolean getValue() {
                         return false;
                     }
                 };
         selectAllHeader.setUpdater(value -> {
-            List<RoleDefinitionDTO> visibleRoles = rolesListDataProvider.getList();
-            for (RoleDefinitionDTO role : visibleRoles) {
+            final List<RoleDefinitionDTO> visibleRoles = rolesListDataProvider.getList();
+            for (final RoleDefinitionDTO role : visibleRoles) {
                 roleSelectionCheckboxColumn.getSelectionModel().setSelected(role, value);
             }
             value = !value;

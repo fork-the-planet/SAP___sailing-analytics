@@ -246,10 +246,10 @@ public abstract class TableWrapper<T, S extends RefreshableSelectionModel<T>, SM
             columnSortHandler.setComparator(selectionCheckboxColumn, selectionCheckboxColumn.getComparator());
             selectionCheckboxColumn.setSortable(false);
             @SuppressWarnings("unchecked")
-            S typedSelectionModel = (S) selectionCheckboxColumn.getSelectionModel();
+            final S typedSelectionModel = (S) selectionCheckboxColumn.getSelectionModel();
             selectionModel = typedSelectionModel;
             table.setSelectionModel(selectionModel, selectionCheckboxColumn.getSelectionManager());
-            Header<Boolean> selectAllHeader = new Header<Boolean>(new CheckboxCell(true, false)) {
+            final Header<Boolean> selectAllHeader = new Header<Boolean>(new CheckboxCell(/* depends on selection */ true, /* handles selection */ false)) {
                 private boolean checked = false;
                 @Override
                 public Boolean getValue() {
@@ -258,10 +258,10 @@ public abstract class TableWrapper<T, S extends RefreshableSelectionModel<T>, SM
                 @Override
                 public void onBrowserEvent(Context context, Element elem, NativeEvent event) {
                     super.onBrowserEvent(context, elem, event);
-                    String type = event.getType();
+                    final String type = event.getType();
                     if ("click".equals(type) || "change".equals(type)) {
                         checked = !checked;
-                        for (T row : dataProvider.getList()) {
+                        for (final T row : dataProvider.getList()) {
                             selectionModel.setSelected(row, checked);
                         }
                         table.redrawHeaders();
@@ -271,7 +271,7 @@ public abstract class TableWrapper<T, S extends RefreshableSelectionModel<T>, SM
             table.addColumn(selectionCheckboxColumn, selectAllHeader);
         } else {
             @SuppressWarnings("unchecked")
-            S typedSelectionModel = (S) new RefreshableSingleSelectionModel<T>(entityIdentityComparator, dataProvider);
+            final S typedSelectionModel = (S) new RefreshableSingleSelectionModel<T>(entityIdentityComparator, dataProvider);
             selectionModel = typedSelectionModel;
             table.setSelectionModel(selectionModel);
         }
