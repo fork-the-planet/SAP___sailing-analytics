@@ -246,19 +246,26 @@ public abstract class TableWrapper<T, S extends RefreshableSelectionModel<T>, SM
             final S typedSelectionModel = (S) selectionCheckboxColumn.getSelectionModel();
             selectionModel = typedSelectionModel;
             table.setSelectionModel(selectionModel, selectionCheckboxColumn.getSelectionManager());
-            final Header<Boolean> selectAllHeader = new Header<Boolean>(new CheckboxCell()) {
+            final CheckboxCell selectAllCell = new CheckboxCell();
+            final Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
                 @Override
                 public Boolean getValue() {
                     return false;
                 }
             };
             selectAllHeader.setUpdater(value -> {
-                for (final T ct : dataProvider.getList()) {
+                for (final T mp : dataProvider.getList()) {
                     if (selectionModel != null) {
-                        selectionModel.setSelected(ct, value);
+                        selectionModel.setSelected(mp, value);
                     }
                 }
-                value = !value;
+            });
+            selectionModel.addSelectionChangeHandler(e -> {
+                if (selectionModel.getSelectedSet().isEmpty()) {
+                    selectAllCell.setViewData(/* key */ selectAllHeader.getValue(), false);
+                } else if (selectionModel.getSelectedSet().size() == dataProvider.getList().size()) {
+                    selectAllCell.setViewData(/* key */ selectAllHeader.getValue(), true);
+                }
             });
             table.addColumn(selectionCheckboxColumn, selectAllHeader);
         } else {

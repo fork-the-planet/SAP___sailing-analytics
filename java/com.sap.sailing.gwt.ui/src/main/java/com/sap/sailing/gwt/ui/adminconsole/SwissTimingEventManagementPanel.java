@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -292,20 +291,7 @@ public class SwissTimingEventManagementPanel extends AbstractEventManagementPane
                         filterablePanelEvents.getAllListDataProvider()
                 );
         raceTable.setSelectionModel(selectionModel);
-        selectionColumn.setSortable(false);
-        final CheckboxCell selectAllCell = new CheckboxCell();
-        final Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
-            @Override
-            public Boolean getValue() {
-                return false;
-            }
-        };
-        selectAllHeader.setUpdater(value -> {
-            for (final SwissTimingRaceRecordDTO race : raceList.getList()) {
-                selectionModel.setSelected(race, value);
-            }
-            value = !value;
-        });
+        final Header<Boolean> selectAllHeader = selectionColumn.createHeader();
         raceTable.addColumn(selectionColumn, selectAllHeader);
         raceTable.addColumn(regattaNameColumn, stringConstants.regatta());
         raceTable.addColumn(seriesNameColumn, stringConstants.series());

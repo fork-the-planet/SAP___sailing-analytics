@@ -1,7 +1,6 @@
 package com.sap.sailing.gwt.ui.adminconsole;
 
 import java.util.Comparator;
-import java.util.List;
 
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
@@ -15,7 +14,6 @@ import com.sap.sse.gwt.client.celltable.EntityIdentityComparator;
 import com.sap.sse.gwt.client.celltable.FlushableCellTable;
 import com.sap.sse.gwt.client.celltable.SelectionCheckboxColumn;
 import com.sap.sse.security.ui.client.UserService;
-import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.user.cellview.client.Header;
 
 public class StructureImportListComposite extends RegattaListComposite {
@@ -94,22 +92,7 @@ public class StructureImportListComposite extends RegattaListComposite {
         });
 
         columnSortHandler.setComparator(selectionCheckboxColumn, selectionCheckboxColumn.getComparator());
-        selectionCheckboxColumn.setSortable(false);
-        CheckboxCell selectAllCell = new CheckboxCell();
-        Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
-            private boolean checked = false;
-            @Override
-            public Boolean getValue() {
-                return checked;
-            }
-        };
-        selectAllHeader.setUpdater(value -> {
-            List<RegattaDTO> visible = regattaListDataProvider.getList();
-            for (RegattaDTO r : visible) {
-                selectionCheckboxColumn.getSelectionModel().setSelected(r, value);
-            }
-            value = !value;
-        });
+        final Header<Boolean> selectAllHeader = selectionCheckboxColumn.createHeader();
         table.addColumn(selectionCheckboxColumn, selectAllHeader);
         table.addColumn(regattaNameColumn, stringMessages.regattaName());
         table.addColumn(regattaStructureColumn, stringMessages.series());

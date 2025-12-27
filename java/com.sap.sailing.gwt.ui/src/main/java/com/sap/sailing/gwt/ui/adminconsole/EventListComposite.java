@@ -82,7 +82,6 @@ import com.sap.sse.security.ui.client.component.EditOwnershipDialog.DialogConfig
 import com.sap.sse.security.ui.client.component.SecuredDTOOwnerColumn;
 import com.sap.sse.security.ui.client.component.editacl.EditACLDialog;
 import com.google.gwt.user.cellview.client.Header;
-import com.google.gwt.cell.client.CheckboxCell;
 
 /**
  * A composite showing the list of all sailing events  
@@ -374,20 +373,7 @@ public class EventListComposite extends Composite {
         configureTableColumnSortHandler(listHandler, eventSelectionCheckboxColumn,
                 eventNameColumn, venueNameColumn, startEndDateColumn, isPublicColumn, courseAreasColumn,
                 leaderboardGroupsColumn, groupColumn, userColumn);
-        eventSelectionCheckboxColumn.setSortable(false);
-        CheckboxCell selectAllCell = new CheckboxCell();
-        Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
-            @Override
-            public Boolean getValue() {
-                return false;
-            }};
-        selectAllHeader.setUpdater(value -> {
-            List<EventDTO> visibleEvents = eventListDataProvider.getList();
-            for (EventDTO e : visibleEvents) {
-                refreshableEventSelectionModel.setSelected(e, value);
-            }
-            value = !value;
-            });
+        final Header<Boolean> selectAllHeader = eventSelectionCheckboxColumn.createHeader();
         table.addColumn(eventSelectionCheckboxColumn, selectAllHeader);
         table.addColumn(eventNameColumn, stringMessages.event());
         table.addColumn(venueNameColumn, stringMessages.venue());

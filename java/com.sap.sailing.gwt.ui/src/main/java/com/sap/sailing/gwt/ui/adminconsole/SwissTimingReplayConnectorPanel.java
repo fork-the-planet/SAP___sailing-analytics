@@ -6,12 +6,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
-import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.cellview.client.AbstractCellTable;
-import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.Header;
 import com.google.gwt.user.cellview.client.ColumnSortEvent.Handler;
@@ -43,10 +41,10 @@ import com.sap.sse.gwt.adminconsole.AdminConsoleTableResources;
 import com.sap.sse.gwt.adminconsole.FilterablePanelProvider;
 import com.sap.sse.gwt.client.ErrorReporter;
 import com.sap.sse.gwt.client.async.MarkedAsyncCallback;
-import com.sap.sse.gwt.client.celltable.BaseCelltable;
 import com.sap.sse.gwt.client.celltable.CellTableWithCheckboxResources;
 import com.sap.sse.gwt.client.celltable.EntityIdentityComparator;
-import com.sap.sse.gwt.client.celltable.RefreshableMultiSelectionModel;
+import com.sap.sse.gwt.client.celltable.FlushableCellTable;
+import com.sap.sse.gwt.client.celltable.SelectionCheckboxColumn;
 import com.sap.sse.gwt.client.dialog.DataEntryDialog.DialogCallback;
 import com.sap.sse.gwt.client.panels.AbstractFilterablePanel;
 import com.sap.sse.gwt.client.panels.LabeledAbstractFilterablePanel;
@@ -64,7 +62,7 @@ public class SwissTimingReplayConnectorPanel extends AbstractEventManagementPane
     private final ErrorReporter errorReporter;
     private final LabeledAbstractFilterablePanel<SwissTimingReplayRaceDTO> filterablePanelEvents;
     private final ListDataProvider<SwissTimingReplayRaceDTO> raceList;
-    private final CellTable<SwissTimingReplayRaceDTO> raceTable;
+    private final FlushableCellTable<SwissTimingReplayRaceDTO> raceTable;
     private final List<SwissTimingReplayRaceDTO> availableSwissTimingRaces;
 
     private final SwissTimingArchivedConnectionTableWrapper connectionsTable;
@@ -175,7 +173,7 @@ public class SwissTimingReplayConnectorPanel extends AbstractEventManagementPane
         raceStartTrackingColumn.setSortable(true);
         boatClassNamesColumn.setSortable(true);
         AdminConsoleTableResources tableRes = GWT.create(AdminConsoleTableResources.class);
-        raceTable = new BaseCelltable<SwissTimingReplayRaceDTO>(/* pageSize */10000, tableRes);
+        raceTable = new FlushableCellTable<>(10000, tableRes);
         raceTable.setWidth("300px");
         raceList = new ListDataProvider<SwissTimingReplayRaceDTO>();
         filterablePanelEvents = new LabeledAbstractFilterablePanel<SwissTimingReplayRaceDTO>(lblFilterEvents,
@@ -192,55 +190,24 @@ public class SwissTimingReplayConnectorPanel extends AbstractEventManagementPane
                 return raceTable;
             }
         };
-        final RefreshableMultiSelectionModel<SwissTimingReplayRaceDTO> selectionModel =
-                new RefreshableMultiSelectionModel<SwissTimingReplayRaceDTO>(
-                        new EntityIdentityComparator<SwissTimingReplayRaceDTO>() {
-                            @Override
-                            public boolean representSameEntity(SwissTimingReplayRaceDTO dto1, SwissTimingReplayRaceDTO dto2) {
-                                return dto1.race_id.equals(dto2.race_id);
-                            }
-                            @Override
-                            public int hashCode(SwissTimingReplayRaceDTO t) {
-                                return t.race_id.hashCode();
-                            }
-                        },
-                        filterablePanelEvents.getAllListDataProvider()
-                );
-        raceTable.setSelectionModel(selectionModel);
-        final Column<SwissTimingReplayRaceDTO, Boolean> selectColumn =
-                new Column<SwissTimingReplayRaceDTO, Boolean>(new CheckboxCell(true, false)) {
+        final SelectionCheckboxColumn<SwissTimingReplayRaceDTO> checkColumn = new SelectionCheckboxColumn<SwissTimingReplayRaceDTO>(
+                tableRes.cellTableStyle().cellTableCheckboxSelected(),
+                tableRes.cellTableStyle().cellTableCheckboxDeselected(),
+                tableRes.cellTableStyle().cellTableCheckboxColumnCell(),
+                new EntityIdentityComparator<SwissTimingReplayRaceDTO>() {
                     @Override
-                    public Boolean getValue(SwissTimingReplayRaceDTO object) {
-                        return selectionModel.isSelected(object);
+                    public boolean representSameEntity(SwissTimingReplayRaceDTO a, SwissTimingReplayRaceDTO b) {
+                        return a.race_id.equals(b.race_id);
                     }
-                };
-        selectColumn.setFieldUpdater((index, object, value) -> selectionModel.setSelected(object, value));
-        selectColumn.setSortable(false);
-        final CheckboxCell selectAllCell = new CheckboxCell();
-        final Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
-            @Override
-            public Boolean getValue() {
-                // Derive state from the current selection model
-                final List<SwissTimingReplayRaceDTO> visible = raceList.getList();
-                if (visible.isEmpty()) {
-                    return false;
-                }
-                // Checked only if *all* visible rows are selected
-                for (final SwissTimingReplayRaceDTO race : visible) {
-                    if (!selectionModel.isSelected(race)) {
-                        return false;
+                    @Override
+                    public int hashCode(SwissTimingReplayRaceDTO t) {
+                        return t.race_id.hashCode();
                     }
-                }
-                return true;
-            }
-        };
-        selectAllHeader.setUpdater(value -> {
-            for (SwissTimingReplayRaceDTO race : raceList.getList()) {
-                selectionModel.setSelected(race, value);
-            }
-            value = !value;
-        });
-        raceTable.addColumn(selectColumn, selectAllHeader);
+                }, filterablePanelEvents.getAllListDataProvider(), raceTable);
+        checkColumn.setSortable(false);
+        final Header<Boolean> selectAllHeader = checkColumn.createHeader();
+        raceTable.setSelectionModel(checkColumn.getSelectionModel());
+        raceTable.addColumn(checkColumn, selectAllHeader);
         raceTable.addColumn(raceNameColumn, stringMessages.race());
         raceTable.addColumn(regattaNameColumn, "RSC");
         raceTable.addColumn(boatClassNamesColumn, stringMessages.boatClass());

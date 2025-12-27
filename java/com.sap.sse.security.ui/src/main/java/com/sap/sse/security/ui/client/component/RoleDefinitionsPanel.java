@@ -14,10 +14,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
-import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
@@ -223,21 +221,7 @@ public class RoleDefinitionsPanel extends VerticalPanel {
                 stringMessages);
         roleActionColumn.addAction(DefaultActionsImagesBarCell.ACTION_CHANGE_ACL, DefaultActions.CHANGE_ACL,
                 configACL::openDialog);
-        roleSelectionCheckboxColumn.setSortable(false);
-        final CheckboxCell selectAllCell = new CheckboxCell();
-        final Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
-                    @Override
-                    public Boolean getValue() {
-                        return false;
-                    }
-                };
-        selectAllHeader.setUpdater(value -> {
-            final List<RoleDefinitionDTO> visibleRoles = rolesListDataProvider.getList();
-            for (final RoleDefinitionDTO role : visibleRoles) {
-                roleSelectionCheckboxColumn.getSelectionModel().setSelected(role, value);
-            }
-            value = !value;
-        });
+        final Header<Boolean> selectAllHeader = roleSelectionCheckboxColumn.createHeader();
         table.addColumn(roleSelectionCheckboxColumn, selectAllHeader);
         table.addColumn(roleDefinitionNameColumn, stringMessages.name());
         table.addColumn(permissionsColumn, stringMessages.permissions());

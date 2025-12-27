@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.google.gwt.cell.client.AbstractCell;
-import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -306,21 +305,7 @@ public class RegattaListComposite extends Composite {
                 stringMessages);
         actionsColumn.addAction(RegattaConfigImagesBarCell.ACTION_CHANGE_ACL, DefaultActions.CHANGE_ACL,
                 regattaDTO -> configACL.openDialog(regattaDTO));
-        regattaSelectionCheckboxColumn.setSortable(false);
-        CheckboxCell selectAllCell = new CheckboxCell();
-        Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
-            private boolean checked = false;
-            @Override
-            public Boolean getValue() {
-                return checked;
-            }};
-        selectAllHeader.setUpdater(value -> {
-            List<RegattaDTO> visibleRegattas = regattaListDataProvider.getList();
-            for (RegattaDTO e : visibleRegattas) {
-                refreshableRegattaMultiSelectionModel.setSelected(e, value);
-            }
-            value = !value;
-            });
+        final Header<Boolean> selectAllHeader = regattaSelectionCheckboxColumn.createHeader();
         table.addColumn(regattaSelectionCheckboxColumn, selectAllHeader);
         table.addColumn(regattaNameColumn, stringMessages.regattaName());
         table.addColumn(regattaCanBoatsOfCompetitorsChangePerRaceColumn, stringMessages.canBoatsChange());

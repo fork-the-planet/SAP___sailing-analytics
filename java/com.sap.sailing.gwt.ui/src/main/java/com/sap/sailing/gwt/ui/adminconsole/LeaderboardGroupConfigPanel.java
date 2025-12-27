@@ -18,7 +18,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.FontWeight;
 import com.google.gwt.dom.client.Style.Unit;
@@ -281,21 +280,7 @@ public class LeaderboardGroupConfigPanel extends AbstractRegattaPanel
         };
         leaderboardsTable.setWidth("100%");
         leaderboardsTable.addColumnSortHandler(leaderboardsListHandler);
-        leaderboardTableSelectionColumn.setSortable(false);
-        CheckboxCell selectAllCell = new CheckboxCell();
-        Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
-            private boolean checked = false;
-            @Override
-            public Boolean getValue() {
-                return checked;
-            }};
-        selectAllHeader.setUpdater(value -> {
-            List<StrippedLeaderboardDTO> visibleEvents = leaderboardsProvider.getList();
-            for (StrippedLeaderboardDTO e : visibleEvents) {
-                refreshableLeaderboardsSelectionModel.setSelected(e, value);
-            }
-            value = !value;
-            });
+        final Header<Boolean> selectAllHeader = leaderboardTableSelectionColumn.createHeader();
         leaderboardsTable.addColumn(leaderboardTableSelectionColumn, selectAllHeader);
         leaderboardsTable.addColumn(leaderboardsNameColumn, stringMessages.leaderboardName());
         leaderboardsTable.addColumn(leaderboardsRacesColumn, stringMessages.races());
@@ -401,22 +386,7 @@ public class LeaderboardGroupConfigPanel extends AbstractRegattaPanel
                                 return t.getName().hashCode();
                             }
                         }, groupDetailsProvider, groupDetailsTable);
-        groupDetailsTableSelectionColumn.setSortable(false);
-        CheckboxCell groupDetailsSelectAllCell = new CheckboxCell();
-        Header<Boolean> groupDetailsSelectAllHeader = new Header<Boolean>(groupDetailsSelectAllCell) {
-           private boolean checked = false;
-           @Override
-           public Boolean getValue() {
-               return checked;
-           }
-        };
-        groupDetailsSelectAllHeader.setUpdater(value -> {
-            List<StrippedLeaderboardDTO> visibleLeaderboardsInGroup = groupDetailsProvider.getList();
-            for (StrippedLeaderboardDTO leaderboard : visibleLeaderboardsInGroup) {
-                groupDetailsTableSelectionColumn.getSelectionModel().setSelected(leaderboard, value);
-            }
-            value = !value;
-        });
+        final Header<Boolean> groupDetailsSelectAllHeader = groupDetailsTableSelectionColumn.createHeader();
         groupDetailsTable.setWidth("100%");
         groupDetailsTable.addColumn(groupDetailsTableSelectionColumn, groupDetailsSelectAllHeader);
         groupDetailsTable.addColumn(groupDetailsNameColumn, stringMessages.leaderboardName());
@@ -627,23 +597,8 @@ public class LeaderboardGroupConfigPanel extends AbstractRegattaPanel
                         return t.getId().hashCode();
                     }
                 }, groupsFilterablePanel.getAllListDataProvider(), groupsTable);
-        leaderboardTableSelectionColumn.setSortable(false);
-        CheckboxCell groupsSelectAllCell = new CheckboxCell();
-        Header<Boolean> groupsSelectAllHeader = new Header<Boolean>(groupsSelectAllCell) {
-            private boolean checked = false;
-            @Override
-            public Boolean getValue() {
-                return checked;
-            }
-        };
-        groupsSelectAllHeader.setUpdater(value -> {
-            List<LeaderboardGroupDTO> visibleGroups = groupsProvider.getList();
-            for (LeaderboardGroupDTO group : visibleGroups) {
-                refreshableGroupsSelectionModel.setSelected(group, value);
-            }
-            value = !value;
-        });
-            groupsTable.setWidth("100%");
+        final Header<Boolean> groupsSelectAllHeader = leaderboardTableSelectionColumn.createHeader();
+        groupsTable.setWidth("100%");
         groupsTable.addColumn(leaderboardTableSelectionColumn, groupsSelectAllHeader);
         groupsTable.addColumn(groupNameColumn, stringMessages.name());
         groupsTable.addColumn(groupDescriptionColumn, stringMessages.description());

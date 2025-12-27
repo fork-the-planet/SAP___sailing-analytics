@@ -15,7 +15,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.i18n.client.NumberFormat;
@@ -376,21 +375,7 @@ public class IgtimiDevicesPanel extends FlowPanel implements FilterablePanelProv
                 .create(userService.getUserManagementWriteService(), type, roleDefinition -> refreshDevices(), stringMessages);
         actionColumn.addAction(DefaultActionsImagesBarCell.ACTION_CHANGE_ACL, DefaultActions.CHANGE_ACL,
                 configACL::openDialog);
-        devicesSelectionCheckboxColumn.setSortable(false);
-        CheckboxCell devicesSelectAllCell = new CheckboxCell();
-        Header<Boolean> devicesSelectAllHeader = new Header<Boolean>(devicesSelectAllCell) {
-            @Override
-            public Boolean getValue() {
-                return false;
-            }
-        };
-        devicesSelectAllHeader.setUpdater(value -> {
-            for (IgtimiDeviceWithSecurityDTO device : filteredDevices.getList()) {
-                devicesSelectionCheckboxColumn.getSelectionModel().setSelected(device, value);
-            }
-            value = !value;
-        });
-        // add columns to table:
+        final Header<Boolean> devicesSelectAllHeader = devicesSelectionCheckboxColumn.createHeader();
         table.addColumn(devicesSelectionCheckboxColumn, devicesSelectAllHeader);
         table.addColumn(deviceIdColumn, stringMessages.id());
         table.addColumn(deviceNameColumn, stringMessages.name());
@@ -507,21 +492,7 @@ public class IgtimiDevicesPanel extends FlowPanel implements FilterablePanelProv
                 .create(userService.getUserManagementWriteService(), type, roleDefinition -> refreshDataAccessWindows(), stringMessages);
         actionColumn.addAction(DefaultActionsImagesBarCell.ACTION_CHANGE_ACL, DefaultActions.CHANGE_ACL,
                 configACL::openDialog);
-        dawsSelectionCheckboxColumn.setSortable(false);
-        CheckboxCell dawSelectAllCell = new CheckboxCell();
-        Header<Boolean> dawSelectAllHeader = new Header<Boolean>(dawSelectAllCell) {
-            @Override
-            public Boolean getValue() {
-                return false;
-            }
-        };
-        dawSelectAllHeader.setUpdater(value -> {
-            boolean newState = value != null && value;
-            for (IgtimiDataAccessWindowWithSecurityDTO daw : filteredDAWs.getList()) {
-                dawsSelectionCheckboxColumn.getSelectionModel().setSelected(daw, newState);
-            }
-        });
-        // add columns to table:
+        final Header<Boolean> dawSelectAllHeader = dawsSelectionCheckboxColumn.createHeader();
         table.addColumn(dawsSelectionCheckboxColumn, dawSelectAllHeader);
         table.addColumn(dawIdColumn, stringMessages.id());
         table.addColumn(dawSerialNumberColumn, stringMessages.serialNumber());

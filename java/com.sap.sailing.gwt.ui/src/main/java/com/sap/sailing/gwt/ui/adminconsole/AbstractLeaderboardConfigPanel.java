@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -402,21 +401,7 @@ public abstract class AbstractLeaderboardConfigPanel extends FormPanel
                 tableResources.cellTableStyle().cellTableCheckboxDeselected(),
                 tableResources.cellTableStyle().cellTableCheckboxColumnCell(),
                 new NameBasedStrippedLeaderboardDTOEntityIdentityComparator(), listDataProvider, leaderboardTable);
-        final CheckboxCell selectAllCell = new CheckboxCell();
-        final Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
-            private boolean checked = false;
-            @Override
-            public Boolean getValue() {
-                return checked;
-            }};
-        selectAllHeader.setUpdater(value -> {
-            List<StrippedLeaderboardDTO> visibleLeaderbords = filteredLeaderboardList.getList();
-            for (final StrippedLeaderboardDTO l : visibleLeaderbords) {
-                leaderboardSelectionModel.setSelected(l, value);
-            }
-            value = !value;
-            });
-        selectionCheckboxColumn.setSortable(false);
+        final Header<Boolean> selectAllHeader = selectionCheckboxColumn.createHeader();
         leaderboardTable.addColumn(selectionCheckboxColumn, selectAllHeader);
         return selectionCheckboxColumn;
     }
