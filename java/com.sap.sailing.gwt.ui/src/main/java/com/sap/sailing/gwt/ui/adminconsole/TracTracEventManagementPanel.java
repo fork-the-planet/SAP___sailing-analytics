@@ -341,7 +341,6 @@ public class TracTracEventManagementPanel extends AbstractEventManagementPanel i
             @Override
             public Boolean getValue() {
                 return false;
-             
             }};
         selectAllHeader.setUpdater(value -> {
             for (final TracTracRaceRecordDTO race : raceList.getList()) {

@@ -185,7 +185,7 @@ public class MarkPropertiesPanel extends FlowPanel implements FilterablePanelPro
                         return t.getUuid().hashCode();
                     }
                 }, filterableMarkProperties.getAllListDataProvider(), markPropertiesTable);
-        CheckboxCell selectAllCell = new CheckboxCell();
+        final CheckboxCell selectAllCell = new CheckboxCell();
         Header<Boolean> selectAllHeader = new Header<Boolean>(selectAllCell) {
             @Override
             public Boolean getValue() {
@@ -199,7 +199,6 @@ public class MarkPropertiesPanel extends FlowPanel implements FilterablePanelPro
                     refreshableSelectionModel.setSelected(mp, value);
                 }
             }
-            value = !value;
         });
         markPropertiesTable.addColumn(checkColumn, selectAllHeader);
         markPropertiesTable.setColumnWidth(checkColumn, 40, Unit.PX);
@@ -335,6 +334,13 @@ public class MarkPropertiesPanel extends FlowPanel implements FilterablePanelPro
         markPropertiesTable.addColumn(actionsColumn, stringMessages.actions());
         refreshableSelectionModel = checkColumn.getSelectionModel();
         markPropertiesTable.setSelectionModel(checkColumn.getSelectionModel(), checkColumn.getSelectionManager());
+        refreshableSelectionModel.addSelectionChangeHandler(e -> {
+            if (refreshableSelectionModel.getSelectedSet().isEmpty()) {
+                selectAllCell.setViewData(/* key */ selectAllHeader.getValue(), false);
+            } else if (refreshableSelectionModel.getSelectedSet().size() == markPropertiesListDataProvider.getList().size()) {
+                selectAllCell.setViewData(/* key */ selectAllHeader.getValue(), true);
+            }
+        });
     }
 
     public void refreshMarkProperties() {
