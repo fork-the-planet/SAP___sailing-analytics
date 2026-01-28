@@ -62,9 +62,10 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
     
     /**
      * The set needs no special synchronization; all methods on this {@link CourseChangeBasedTrackApproximation} object
-     * that may mutate it are {@code synchronized} methods.
+     * that may read or mutate it are {@code synchronized} methods.
      */
     private final NavigableSet<GPSFixMoving> maneuverCandidates;
+    private int numberOfFixesAdded;
     
     /**
      * The fix window consists of the list of fixes, a corresponding list with the course changes at each fix within the
@@ -155,6 +156,7 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
             final GPSFixMoving result;
             final SpeedWithBearing nextSpeed = next.isEstimatedSpeedCached() ? next.getCachedEstimatedSpeed() : track.getEstimatedSpeed(next.getTimePoint());
             if (nextSpeed != null) {
+                numberOfFixesAdded++;
                 int insertPosition = window.size();
                 GPSFixMoving previous;
                 SpeedWithBearing previousSpeed;
@@ -340,7 +342,7 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
     private synchronized void addAllFixesOfTrack() {
         track.lockForRead();
         try {
-            for (final GPSFixMoving fix : track.getFixes()) {
+            for (final GPSFixMoving fix : track.getRawFixes()) {
                 addFix(fix);
             }
         } finally {
@@ -361,6 +363,10 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
         if (maneuverCandidate != null) {
             maneuverCandidates.add(maneuverCandidate);
         }
+    }
+    
+    public int getNumberOfFixesAdded() {
+        return numberOfFixesAdded;
     }
     
     /**
@@ -417,7 +423,7 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
     }
 
     /**
-     * Precondition: the caller holds at least a read lock on {@link #maneuverCandidatesLock}
+     * Precondition: the caller owns this object's monitor ({@code synchronized})
      */
     private GPSFixMoving getExistingManeuverCandidateInRange(TimeRange leftPartOfTimeRangeToReScan) {
         final GPSFixMoving firstCandidateAtOrAfterStartOfTimeRange = maneuverCandidates.ceiling(

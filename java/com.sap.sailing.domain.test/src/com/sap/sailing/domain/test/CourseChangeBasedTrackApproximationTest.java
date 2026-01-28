@@ -47,11 +47,13 @@ public class CourseChangeBasedTrackApproximationTest extends OnlineTracTracBased
                 new URL("file:///" + new File("resources/event_20110609_KielerWoch-505_Race_2.txt").getCanonicalPath()),
                 /* liveUri */ null, /* storedUri */ storedUri,
                 new ReceiverType[] { ReceiverType.RACECOURSE, ReceiverType.RAWPOSITIONS });
+        getTrackedRace().waitUntilNotLoading();
         assertFalse(Util.isEmpty(getTrackedRace().getRace().getCompetitors()));
-        final DynamicGPSFixTrack<Competitor, GPSFixMoving> sampleTrack = getTrackedRace().getTrack(getTrackedRace().getRace().getCompetitors().iterator().next());
+        final Competitor sampleCompetitor = getTrackedRace().getRace().getCompetitors().iterator().next();
+        final DynamicGPSFixTrack<Competitor, GPSFixMoving> sampleTrack = getTrackedRace().getTrack(sampleCompetitor);
         sampleTrack.lockForRead();
         try {
-            assertFalse(Util.isEmpty(sampleTrack.getRawFixes()));
+            assertFalse(Util.isEmpty(sampleTrack.getRawFixes()), "Track of competitor "+sampleCompetitor.getName()+" is empty");
         } finally {
             sampleTrack.unlockAfterRead();
         }
@@ -93,6 +95,7 @@ public class CourseChangeBasedTrackApproximationTest extends OnlineTracTracBased
             sampleTrack.unlockAfterRead();
         }
         final CourseChangeBasedTrackApproximation lateInitApproximation = new CourseChangeBasedTrackApproximation(trackCopy, sampleCompetitor.getBoat().getBoatClass());
+        assertEquals(earlyInitApproximation.getNumberOfFixesAdded(), lateInitApproximation.getNumberOfFixesAdded(), "Number of fixes added to approximators differs");
         final Iterable<GPSFixMoving> earlyInitResult = earlyInitApproximation.approximate(from, to);
         final Iterable<GPSFixMoving> lateInitResult = lateInitApproximation.approximate(from, to);
         assertEquals(Util.size(earlyInitResult), Util.size(lateInitResult), "Different numbers of approximation points for competitor "+sampleCompetitor.getName());
