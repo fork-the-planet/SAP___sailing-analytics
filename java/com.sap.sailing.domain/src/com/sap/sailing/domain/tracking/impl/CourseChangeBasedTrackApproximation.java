@@ -85,13 +85,15 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
          * We need to remember the speed / bearing as we saw them when we inserted the fixes into the {@link #window}
          * collection. Based on more fixes getting added to the track, things may change. In particular, fixes that may have
          * had a valid speed when inserted may later have their cached speed/bearing invalidated, and computing it again
-         * from the track may then yield {@code null}.
+         * from the track may then yield {@code null}.<p>
+         * 
+         * TODO bug6209: the above observation regarding changes when later fixes get added is exactly what is causing the bug6209 issues!
          */
         private final LinkedList<SpeedWithBearing> speedForFixesInWindow;
         
         /**
          * one shorter than "window"; {@link #totalCourseChangeFromBeginningOfWindow}{@code [i]} is from
-         * {@link #window}{@code [i]} to {@link #window}{@code [i+1]}
+         * {@link #window}{@code [0]} to {@link #window}{@code [i+1]}
          */
         private final List<Double> totalCourseChangeFromBeginningOfWindow;
 
@@ -154,8 +156,9 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
         GPSFixMoving add(GPSFixMoving next) {
             assert window.isEmpty() || !next.getTimePoint().before(window.peekFirst().getTimePoint());
             final GPSFixMoving result;
-            final SpeedWithBearing nextSpeed = next.isEstimatedSpeedCached() ? next.getCachedEstimatedSpeed() : track.getEstimatedSpeed(next.getTimePoint());
-            if (nextSpeed != null) {
+            final SpeedWithBearing nextSpeed = /* TODO this was the original code that can depend on fixes newer than next: next.isEstimatedSpeedCached() ? next.getCachedEstimatedSpeed() : track.getEstimatedSpeed(next.getTimePoint()) */
+                                               next.getSpeed(); int TODO; // TODO bug6209: try without dependency on newer fixes and see if it helps produce equal results for early/late initialization
+            if (nextSpeed != null) { // TODO bug6209: this gets messy... if we drop a fix because no estimated speed can be determined for it, and later fix additions may change this, where would we get this fix from again?
                 numberOfFixesAdded++;
                 int insertPosition = window.size();
                 GPSFixMoving previous;
@@ -179,18 +182,20 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
                     // rather expensive ceil/floor search on the track; resort to track.getEstimatedSpeed if not cached
                     assert previousSpeed != null; // we wouldn't have added the fix in the previous run if it hadn't had a valid speed
                     final double courseChangeBetweenPreviousAndNextInDegrees = previousSpeed.getBearing().getDifferenceTo(nextSpeed.getBearing()).getDegrees();
-                    windowDuration = windowDuration.plus(previous.getTimePoint().until(next.getTimePoint()));
+                    if (insertPosition == window.size()-1) { // if not appended to the end, the window duration won't change
+                        windowDuration = windowDuration.plus(previous.getTimePoint().until(next.getTimePoint()));
+                    }
                     if (totalCourseChangeFromBeginningOfWindow.isEmpty()) {
                         totalCourseChangeFromBeginningOfWindow.add(courseChangeBetweenPreviousAndNextInDegrees);
                         absoluteMaximumTotalCourseChangeFromBeginningOfWindowInDegrees = Math.abs(courseChangeBetweenPreviousAndNextInDegrees);
                         indexOfMaximumTotalCourseChange = 0;
                     } else {
-                        final double totalCourseChangeFromBeginningOfWindowForCurrentFix = totalCourseChangeFromBeginningOfWindow.get(totalCourseChangeFromBeginningOfWindow.size()-1)
+                        final double totalCourseChangeFromBeginningOfWindowForCurrentFix = totalCourseChangeFromBeginningOfWindow.get(insertPosition-2)
                                 + courseChangeBetweenPreviousAndNextInDegrees;
-                        totalCourseChangeFromBeginningOfWindow.add(totalCourseChangeFromBeginningOfWindowForCurrentFix);
+                        totalCourseChangeFromBeginningOfWindow.add(insertPosition-1, totalCourseChangeFromBeginningOfWindowForCurrentFix);
                         if (Math.abs(totalCourseChangeFromBeginningOfWindowForCurrentFix) > absoluteMaximumTotalCourseChangeFromBeginningOfWindowInDegrees) {
                             absoluteMaximumTotalCourseChangeFromBeginningOfWindowInDegrees = Math.abs(totalCourseChangeFromBeginningOfWindowForCurrentFix);
-                            indexOfMaximumTotalCourseChange = totalCourseChangeFromBeginningOfWindow.size()-1;
+                            indexOfMaximumTotalCourseChange = insertPosition-1;
                         }
                     }
                     if (windowDuration.compareTo(getMaximumWindowLength()) > 0) {
