@@ -5,16 +5,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.sap.sse.common.scalablevalue.KadaneExtremeSubarraysFinder;
+import com.sap.sse.common.scalablevalue.KadaneExtremeSubsequenceFinder;
+import com.sap.sse.common.scalablevalue.KadaneExtremeSubsequenceFinderLinkedListImpl;
 import com.sap.sse.common.scalablevalue.ScalableDouble;
 
-public class KadaneExtremeSubarraysFinderTest {
+public class KadaneExtremeSubsequenceFinderTest {
     private static final double EPSILON = 0.00000001;
-    private KadaneExtremeSubarraysFinder<Double, Double, ScalableDouble> finder;
+    private KadaneExtremeSubsequenceFinder<Double, Double, ScalableDouble> finder;
     
     @BeforeEach
     public void setUp() {
-        finder = new KadaneExtremeSubarraysFinder<>();
+        finder = new KadaneExtremeSubsequenceFinderLinkedListImpl<>();
     }
     
     @Test

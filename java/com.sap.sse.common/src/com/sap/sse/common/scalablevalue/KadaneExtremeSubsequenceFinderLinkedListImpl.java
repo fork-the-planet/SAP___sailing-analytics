@@ -7,27 +7,15 @@ import java.util.List;
 import java.util.ListIterator;
 
 /**
- * In a sequence of {@link ComparableScalableValueWithDistance} objects, tells the contiguous sub-sequence with the
- * greatest and the contiguous sub-sequence with the least sum, according to the
- * {@link ComparableScalableValueWithDistance#add(ScalableValue) add} and the
- * {@link ComparableScalableValueWithDistance#compareTo(Object) compareTo} methods.
- * <p>
- * 
- * The sequence is mutable. In particular, elements can be added at any position, also before the start or after the
- * end, and elements can be removed at least from the beginning of the sequence. Updating the sub-sequences with minimal
- * and maximal sums happens with complexity O(1) when adding to the end of the sequence, so with constant effort
- * regardless the size of the sequence. When inserting into or removing from the sequence at arbitrary positions,
- * constant effort can no longer be guaranteed as changes may need to get propagated onwards to following elements.
- * <p>
- * 
- * See also <a href="https://en.wikipedia.org/wiki/Maximum_subarray_problem">here</a> for a description of the
- * algorithm.
+ * This implementation uses {@link LinkedList}s to implement the full sequence and the max/min sum and start indices
+ * collection. This requires index manipulations when elements are inserted to or removed from anywhere but the end of
+ * the sequence.
  * 
  * @author Axel Uhl (d043530)
  *
  */
-public class KadaneExtremeSubarraysFinder<ValueType, AveragesTo extends Comparable<AveragesTo>, T extends ComparableScalableValueWithDistance<ValueType, AveragesTo>>
-implements Serializable, Iterable<T> {
+public class KadaneExtremeSubsequenceFinderLinkedListImpl<ValueType, AveragesTo extends Comparable<AveragesTo>, T extends ComparableScalableValueWithDistance<ValueType, AveragesTo>>
+implements KadaneExtremeSubsequenceFinder<ValueType, AveragesTo, T>, Serializable, Iterable<T> {
     private static final long serialVersionUID = 2109193559337714286L;
     
     /**
@@ -80,7 +68,7 @@ implements Serializable, Iterable<T> {
      */
     private int endIndexOfMinSumSequence;
     
-    public KadaneExtremeSubarraysFinder() {
+    public KadaneExtremeSubsequenceFinderLinkedListImpl() {
         sequence = new LinkedList<>();
         maxSumEndingAt = new LinkedList<>();
         minSumEndingAt = new LinkedList<>();
@@ -90,6 +78,7 @@ implements Serializable, Iterable<T> {
         endIndexOfMinSumSequence = -1;
     }
 
+    @Override
     public synchronized void add(int index, T t) {
         final ScalableValueWithDistance<ValueType, AveragesTo> oldMaxSum = getMaxSum();
         final ScalableValueWithDistance<ValueType, AveragesTo> oldMinSum = getMinSum();
@@ -205,6 +194,7 @@ implements Serializable, Iterable<T> {
         }
     }
 
+    @Override
     public synchronized void remove(int index) {
         sequence.remove(index);
         final ScalableValueWithDistance<ValueType, AveragesTo> maxSumEndingAtIndex = maxSumEndingAt.remove(index);
@@ -224,22 +214,27 @@ implements Serializable, Iterable<T> {
         update(index+1, maxSumEndingAtIndex, minSumEndingAtIndex);
     }
     
+    @Override
     public synchronized void add(T t) {
         add(sequence.size(), t);
     }
     
+    @Override
     public synchronized void remove(T t) {
         remove(sequence.indexOf(t));
     }
     
+    @Override
     public ScalableValueWithDistance<ValueType, AveragesTo> getMaxSum() {
         return endIndexOfMaxSumSequence == -1 ? null : maxSumEndingAt.get(endIndexOfMaxSumSequence);
     }
     
+    @Override
     public ScalableValueWithDistance<ValueType, AveragesTo> getMinSum() {
         return endIndexOfMinSumSequence == -1 ? null : minSumEndingAt.get(endIndexOfMinSumSequence);
     }
     
+    @Override
     public int getStartIndexOfMaxSumSequence() {
         return startIndexOfMaxSumSequence.isEmpty() ? -1 : startIndexOfMaxSumSequence.get(endIndexOfMaxSumSequence);
     }
@@ -249,10 +244,12 @@ implements Serializable, Iterable<T> {
      *         maximal sum; note that pointing <em>to</em> and not <em>after</em> the last element of that sequence is
      *         slightly different from how indices may be handled in some other from/to collection operations.
      */
+    @Override
     public int getEndIndexOfMaxSumSequence() {
         return endIndexOfMaxSumSequence;
     }
 
+    @Override
     public int getStartIndexOfMinSumSequence() {
         return startIndexOfMinSumSequence.isEmpty() ? -1 : startIndexOfMinSumSequence.get(endIndexOfMinSumSequence);
     }
@@ -262,6 +259,7 @@ implements Serializable, Iterable<T> {
      *         minimal sum; note that pointing <em>to</em> and not <em>after</em> the last element of that sequence is
      *         slightly different from how indices may be handled in some other from/to collection operations.
      */
+    @Override
     public int getEndIndexOfMinSumSequence() {
         return endIndexOfMinSumSequence;
     }
@@ -269,5 +267,20 @@ implements Serializable, Iterable<T> {
     @Override
     public Iterator<T> iterator() {
         return sequence.iterator();
+    }
+
+    @Override
+    public Iterator<T> getSubSequenceWithMaxSum() {
+        return sequence.subList(getStartIndexOfMaxSumSequence(), getEndIndexOfMaxSumSequence()+1).iterator();
+    }
+
+    @Override
+    public Iterator<T> getSubSequenceWithMinSum() {
+        return sequence.subList(getStartIndexOfMinSumSequence(), getEndIndexOfMinSumSequence()+1).iterator();
+    }
+
+    @Override
+    public int size() {
+        return sequence.size();
     }
 }
