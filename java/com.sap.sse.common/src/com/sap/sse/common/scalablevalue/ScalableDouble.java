@@ -1,6 +1,9 @@
 package com.sap.sse.common.scalablevalue;
 
-public class ScalableDouble implements AbstractScalarValue<Double> {
+import java.io.Serializable;
+
+public class ScalableDouble implements AbstractScalarValue<Double>, Serializable {
+    private static final long serialVersionUID = -354261484569358609L;
     private final double value;
     
     public ScalableDouble(double value) {

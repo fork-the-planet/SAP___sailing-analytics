@@ -1,7 +1,7 @@
 package com.sap.sse.common.scalablevalue;
 
+import java.io.Serializable;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.function.BiFunction;
@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.sap.sse.common.Util;
+import com.sap.sse.common.impl.SerializableComparator;
 
 /**
  * An implementation of Kadane's algorithm for "maximum sub-sequence sum" that works incrementally,
@@ -57,7 +58,8 @@ public class KadaneExtremeSubsequenceFinderLinkedNodesImpl<ValueType, AveragesTo
      * 
      * @author Axel Uhl (d043530)
      */
-    private static class Node<ValueType, AveragesTo extends Comparable<AveragesTo>, T extends ComparableScalableValueWithDistance<ValueType, AveragesTo>> {
+    private static class Node<ValueType, AveragesTo extends Comparable<AveragesTo>, T extends ComparableScalableValueWithDistance<ValueType, AveragesTo>> implements Serializable {
+        private static final long serialVersionUID = -2547142048423135013L;
         private static int idCounter = 0;
         private final T value;
         private final int id;
@@ -235,11 +237,11 @@ public class KadaneExtremeSubsequenceFinderLinkedNodesImpl<ValueType, AveragesTo
         this.size = 0;
         this.first = null;
         this.last = null;
-        final Comparator<? super Node<ValueType, AveragesTo, T>> idComparator = (n1, n2)->Integer.compare(n1.getId(), n2.getId());
-        final Comparator<Node<ValueType, AveragesTo, T>> minSumComparator = (n1, n2)->compare(n1.getMinSumEndingHere(), n2.getMinSumEndingHere());
-        final Comparator<Node<ValueType, AveragesTo, T>> maxSumComparator = (n1, n2)->compare(n1.getMaxSumEndingHere(), n2.getMaxSumEndingHere());
-        final Comparator<? super Node<ValueType, AveragesTo, T>> minSumOuterComparator = (n1,n2)->(n1==n2?0:minSumComparator.thenComparing(idComparator).compare(n1, n2));
-        final Comparator<? super Node<ValueType, AveragesTo, T>> maxSumOuterComparator = (n1,n2)->(n1==n2?0:maxSumComparator.thenComparing(idComparator).compare(n1, n2));
+        final SerializableComparator<? super Node<ValueType, AveragesTo, T>> idComparator = (n1, n2)->Integer.compare(n1.getId(), n2.getId());
+        final SerializableComparator<Node<ValueType, AveragesTo, T>> minSumComparator = (n1, n2)->compare(n1.getMinSumEndingHere(), n2.getMinSumEndingHere());
+        final SerializableComparator<Node<ValueType, AveragesTo, T>> maxSumComparator = (n1, n2)->compare(n1.getMaxSumEndingHere(), n2.getMaxSumEndingHere());
+        final SerializableComparator<? super Node<ValueType, AveragesTo, T>> minSumOuterComparator = (n1,n2)->(n1==n2?0:minSumComparator.thenComparing(idComparator).compare(n1, n2));
+        final SerializableComparator<? super Node<ValueType, AveragesTo, T>> maxSumOuterComparator = (n1,n2)->(n1==n2?0:maxSumComparator.thenComparing(idComparator).compare(n1, n2));
         this.nodesOrderedByMinSum = new TreeSet<>(minSumOuterComparator);
         this.nodesOrderedByMaxSum = new TreeSet<>(maxSumOuterComparator);
     }
@@ -557,7 +559,7 @@ public class KadaneExtremeSubsequenceFinderLinkedNodesImpl<ValueType, AveragesTo
     @Override
     public String toString() {
         return "KadaneExtremeSubsequenceFinderLinkedNodesImpl [size=" + size
-                + ", minChangePropagationStepsAvg=" + minChangePropagationStepsSum / minChangePropagationsCount
-                + ", maxChangePropagationStepsAvg=" + maxChangePropagationStepsSum / maxChangePropagationsCount + "]";
+                + ", minChangePropagationStepsAvg=" + (minChangePropagationsCount==0?null:(minChangePropagationStepsSum / minChangePropagationsCount))
+                + ", maxChangePropagationStepsAvg=" + (maxChangePropagationsCount==0?null:(maxChangePropagationStepsSum / maxChangePropagationsCount)) + "]";
     }
 }

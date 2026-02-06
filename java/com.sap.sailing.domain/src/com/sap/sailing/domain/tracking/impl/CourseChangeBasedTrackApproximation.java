@@ -30,6 +30,7 @@ import com.sap.sse.common.impl.TimeRangeImpl;
 import com.sap.sse.common.scalablevalue.KadaneExtremeSubsequenceFinder;
 import com.sap.sse.common.scalablevalue.KadaneExtremeSubsequenceFinderLinkedNodesImpl;
 import com.sap.sse.common.scalablevalue.ScalableDouble;
+import com.sap.sse.common.scalablevalue.ScalableValueWithDistance;
 
 /**
  * Given a {@link GPSFixTrack} containing {@link GPSFixMoving}, an instance of this class finds areas on the track where
@@ -161,7 +162,7 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
         GPSFixMoving add(GPSFixMoving next) {
             assert window.isEmpty() || !next.getTimePoint().before(window.peekFirst().getTimePoint());
             final GPSFixMoving result;
-            final SpeedWithBearing nextSpeed = /* TODO this was the original code that can depend on fixes newer than next: next.isEstimatedSpeedCached() ? next.getCachedEstimatedSpeed() : track.getEstimatedSpeed(next.getTimePoint()) */
+            final SpeedWithBearing nextSpeed = /* TODO this was the original code that can depend on fixes newer than next: next.isEstimatedSpeedCached() ? next.getCachedEstimatedSpeed() : track.getEstimatedSpeed(next.getTimePoint()); */
                                                next.getSpeed(); int TODO; // TODO bug6209: try without dependency on newer fixes and see if it helps produce equal results for early/late initialization
             if (nextSpeed != null) { // TODO bug6209: this gets messy... if we drop a fix because no estimated speed can be determined for it, and later fix additions may change this, where would we get this fix from again?
                 numberOfFixesAdded++;
@@ -187,7 +188,7 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
                     // rather expensive ceil/floor search on the track; resort to track.getEstimatedSpeed if not cached
                     assert previousSpeed != null; // we wouldn't have added the fix in the previous run if it hadn't had a valid speed
                     final double courseChangeBetweenPreviousAndNextInDegrees = previousSpeed.getBearing().getDifferenceTo(nextSpeed.getBearing()).getDegrees();
-                    if (insertPosition == window.size()-1) { // if not appended to the end, the window duration won't change
+                    if (insertPosition == window.size()-1) { // if appended to the end, the window duration changes
                         windowDuration = windowDuration.plus(previous.getTimePoint().until(next.getTimePoint()));
                     }
                     if (courseChangeBetweenFixesInWindow.isEmpty()) {
@@ -254,10 +255,10 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
         private void removeFirst(int howManyElementsToRemove) {
             assert !window.isEmpty();
             for (int i=0; i<howManyElementsToRemove; i++) {
-                final GPSFixMoving removed = window.removeFirst();
+                window.removeFirst();
                 speedForFixesInWindow.removeFirst();
-                windowDuration = window.isEmpty() ? Duration.NULL : windowDuration.minus(removed.getTimePoint().until(window.getFirst().getTimePoint()));
             }
+            windowDuration = window.isEmpty() ? Duration.NULL : window.getFirst().getTimePoint().until(window.getLast().getTimePoint());
             // adjust totalCourseChangeFromBeginningOfWindow by subtracting the first course change from all others
             // and shifting all by one position to the "left"
             if (!courseChangeBetweenFixesInWindow.isEmpty()) {
@@ -280,8 +281,10 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
          */
         private Pair<GPSFixMoving, Integer> getManeuverCandidate() {
             final GPSFixMoving result;
-            final double maximumCourseChangeToStarboard = courseChangeBetweenFixesInWindow.getMaxSum().divide(1);
-            final double maximumCourseChangeToPort = -courseChangeBetweenFixesInWindow.getMinSum().divide(1);
+            final ScalableValueWithDistance<Double, Double> maxSum = courseChangeBetweenFixesInWindow.getMaxSum();
+            final double maximumCourseChangeToStarboard = maxSum == null ? Double.NEGATIVE_INFINITY : maxSum.divide(1);
+            final ScalableValueWithDistance<Double, Double> minSum = courseChangeBetweenFixesInWindow.getMinSum();
+            final double maximumCourseChangeToPort = minSum == null ? Double.NEGATIVE_INFINITY : -minSum.divide(1);
             final double absoluteMaximumTotalCourseChangeFromBeginningOfWindowInDegrees = Math.max(maximumCourseChangeToStarboard, maximumCourseChangeToPort);
             int indexOfMaximumAbsoluteCourseChangeInCorrectDirection = -1;
             if (absoluteMaximumTotalCourseChangeFromBeginningOfWindowInDegrees >= maneuverAngleInDegreesThreshold) {
