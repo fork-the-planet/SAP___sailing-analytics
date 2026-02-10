@@ -2,6 +2,7 @@ package com.sap.sailing.gwt.ui.server;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.lang.management.ManagementFactory;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -71,6 +72,8 @@ public class StatusServlet extends HttpServlet {
                 final long queueLengthDefaultForegroundThreadPoolExecutor = ((ThreadPoolExecutor) defaultForegroundTaskThreadPoolExecutor).getQueue().size();
                 result.put("defaultforegroundthreadpoolexecutorqueuelength", queueLengthDefaultForegroundThreadPoolExecutor);
             }
+            final double systemLoadAverageLastMinute = ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage();
+            result.put("systemloadaveragelastminute", systemLoadAverageLastMinute);
             final long numberOfTrackedRacesToRestore = service.getNumberOfTrackedRacesToRestore();
             result.put("numberofracestorestore", numberOfTrackedRacesToRestore);
             final int numberOfTrackedRacesRestored = service.getNumberOfTrackedRacesRestored();
