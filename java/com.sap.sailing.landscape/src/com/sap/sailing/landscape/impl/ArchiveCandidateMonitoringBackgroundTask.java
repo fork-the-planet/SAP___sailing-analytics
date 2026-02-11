@@ -1,27 +1,28 @@
 package com.sap.sailing.landscape.impl;
 
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import org.apache.shiro.subject.Subject;
-
+import com.sap.sailing.landscape.LandscapeService;
 import com.sap.sailing.landscape.SailingAnalyticsMetrics;
 import com.sap.sailing.landscape.SailingAnalyticsProcess;
+import com.sap.sailing.server.gateway.interfaces.CompareServersResult;
+import com.sap.sailing.server.gateway.interfaces.SailingServer;
 import com.sap.sse.common.Duration;
 import com.sap.sse.common.Named;
 import com.sap.sse.common.TimePoint;
 import com.sap.sse.common.impl.NamedImpl;
+import com.sap.sse.common.mail.MailException;
 import com.sap.sse.landscape.Landscape;
 import com.sap.sse.landscape.RotatingFileBasedLog;
 import com.sap.sse.landscape.aws.AwsApplicationReplicaSet;
-import com.sap.sse.landscape.aws.AwsLandscape;
 import com.sap.sse.landscape.aws.ReverseProxy;
+import com.sap.sse.security.shared.impl.User;
 
 /**
  * A stateful monitoring task that can be {@link #run run} to observe an {@code ARCHIVE} candidate process and wait for
@@ -52,8 +53,10 @@ import com.sap.sse.landscape.aws.ReverseProxy;
 public class ArchiveCandidateMonitoringBackgroundTask implements Runnable {
     private interface Check extends Named {
         boolean runCheck() throws Exception;
+        void setLastFailureMessage(String lastFailureMessage);
         boolean hasTimedOut();
         Duration getDelayAfterFailure();
+        String getLastFailureMessage();
     }
     
     private abstract class AbstractCheck extends NamedImpl implements Check {
@@ -61,6 +64,7 @@ public class ArchiveCandidateMonitoringBackgroundTask implements Runnable {
         private final TimePoint creationTime;
         private final Duration timeout;
         private final Duration delayAfterFailure;
+        private String lastFailureMessage;
 
         public AbstractCheck(String name, Duration timeout, Duration delayAfterFailure) {
             super(name);
@@ -78,6 +82,16 @@ public class ArchiveCandidateMonitoringBackgroundTask implements Runnable {
         public Duration getDelayAfterFailure() {
             return delayAfterFailure;
         }
+
+        @Override
+        public String getLastFailureMessage() {
+            return lastFailureMessage;
+        }
+        
+        @Override
+        public void setLastFailureMessage(String lastFailureMessage) {
+            this.lastFailureMessage = lastFailureMessage;
+        }
     }
     
     private static final Logger logger = Logger.getLogger(ArchiveCandidateMonitoringBackgroundTask.class.getName());
@@ -87,40 +101,56 @@ public class ArchiveCandidateMonitoringBackgroundTask implements Runnable {
     private final static double MAXIMUM_ONE_MINUTE_SYSTEM_LOAD_AVERAGE = 2.0;
     private final static int MAXIMUM_THREAD_POOL_QUEUE_SIZE = 10;
     private final static Optional<Duration> TIMEOUT_FIRST_CONTACT = Optional.of(Landscape.WAIT_FOR_PROCESS_TIMEOUT.get().plus(Landscape.WAIT_FOR_HOST_TIMEOUT.get()));
-    private final Subject subject;
-    private final AwsLandscape<String> landscape;
+    private final static Duration SERVER_COMPARISON_TIMEOUT = Duration.ONE_MINUTE.times(10); // good for two or three attempts, usually
+    private final static Duration DELAY_BETWEEN_COMPARISON_CHECKS = Duration.ONE_MINUTE;
+    
+    /**
+     * The user on whose behalf the monitoring is performed; this is used for sending notifications about the monitoring
+     * result to the user and for performing the monitoring with the same permissions as the user (e.g. when accessing
+     * the candidate's REST API)
+     */
+    private final User currentUser;
+    private final String candidateHostname;
+    private final LandscapeService landscapeService;
     private final AwsApplicationReplicaSet<String, SailingAnalyticsMetrics, SailingAnalyticsProcess<String>> replicaSet;
     private final ReverseProxy<String, SailingAnalyticsMetrics, SailingAnalyticsProcess<String>, RotatingFileBasedLog> reverseProxyCluster;
     private final String optionalKeyName;
     private final byte[] privateKeyEncryptionPassphrase;
     private final ScheduledExecutorService executor;
-    private final TimePoint firstRun;
-    private final List<String> messagesToSendToProcessOwner;
+    
+    /**
+     * A bearer token expected to authenticate the {@link #currentUser} against the candidate and production ARCHIVE
+     * servers
+     */
+    private final String effectiveBearerToken;
+    
     private Iterable<Check> checks;
     private Iterator<Check> checksIterator;
     private Check currentCheck;
+
+
     
-    public ArchiveCandidateMonitoringBackgroundTask(Subject subject, AwsLandscape<String> landscape,
+    public ArchiveCandidateMonitoringBackgroundTask(User currentUser, LandscapeService landscapeService,
             AwsApplicationReplicaSet<String, SailingAnalyticsMetrics, SailingAnalyticsProcess<String>> replicaSet,
             String candidateHostname,
             ReverseProxy<String, SailingAnalyticsMetrics, SailingAnalyticsProcess<String>, RotatingFileBasedLog> reverseProxyCluster,
-            String optionalKeyName, byte[] privateKeyEncryptionPassphrase, ScheduledExecutorService executor) {
-        this.subject = subject;
-        this.landscape = landscape;
+            String optionalKeyName,
+            byte[] privateKeyEncryptionPassphrase, ScheduledExecutorService executor, String effectiveBearerToken) {
+        this.currentUser = currentUser;
+        this.landscapeService = landscapeService;
         this.replicaSet = replicaSet;
+        this.candidateHostname = candidateHostname;
         this.reverseProxyCluster = reverseProxyCluster;
         this.optionalKeyName = optionalKeyName;
         this.privateKeyEncryptionPassphrase = privateKeyEncryptionPassphrase;
         this.executor = executor;
-        this.firstRun = TimePoint.now();
-        this.messagesToSendToProcessOwner = new LinkedList<>();
+        this.effectiveBearerToken = effectiveBearerToken;
         this.checks = Arrays.asList(
                 new IsReady(),
                 new HasLowEnoughSystemLoad(),
                 new HasShortEnoughDefaultBackgroundThreadPoolExecutorQueue(),
                 new HasShortEnoughDefaultForegroundThreadPoolExecutorQueue(),
-                new CompareServersWithRestAPI(),
-                new CompareServersByLeaderboardGroups());
+                new CompareServersWithRestAPI());
         this.checksIterator = this.checks.iterator();
         this.currentCheck = checksIterator.next();
     }
@@ -137,19 +167,27 @@ public class ArchiveCandidateMonitoringBackgroundTask implements Runnable {
                     // re-schedule this task to run next check immediately
                     executor.submit(this);
                 } else {
-                    logger.info("Done with all checks; candidate is ready for production.");
                     // all checks passed; candidate is ready for production; nothing more to do here
+                    logger.info("Done with all checks; candidate is ready for production.");
+                    notifyProcessOwnerCandidateIsReadyForProduction(); // this ends the re-scheduling loop
                 }
             } else {
                 rescheduleCurrentCheckAfterFailureOrTimeout();
             }
         } catch (Exception e) {
             logger.warning("Exception while running check " + currentCheck + " for candidate " + replicaSet.getMaster().getHost().getHostname() + ": " + e.getMessage());
+            currentCheck.setLastFailureMessage(e.getMessage());
         }
     }
 
-    private void rescheduleCurrentCheckAfterFailureOrTimeout() {
-        executor.schedule(this, currentCheck.getDelayAfterFailure().asMillis(), TimeUnit.MILLISECONDS);
+    private void rescheduleCurrentCheckAfterFailureOrTimeout() throws MailException {
+        if (currentCheck.hasTimedOut()) {
+            logger.severe("Check "+currentCheck+" failed and has timed out; giving up on candidate "+replicaSet.getMaster().getHost().getHostname());
+            notifyProcessOwnerCandidateFailedToBecomeReadyForProduction(); // this ends the re-scheduling loop
+        } else {
+            logger.info("Check "+currentCheck+" failed but has not yet timed out; re-scheduling to check again after "+currentCheck.getDelayAfterFailure());
+            executor.schedule(this, currentCheck.getDelayAfterFailure().asMillis(), TimeUnit.MILLISECONDS);
+        }
     }
 
     private class IsReady extends AbstractCheck {
@@ -161,7 +199,11 @@ public class ArchiveCandidateMonitoringBackgroundTask implements Runnable {
 
         @Override
         public boolean runCheck() throws Exception {
-            return replicaSet.getMaster().isReady(Landscape.WAIT_FOR_PROCESS_TIMEOUT);
+            final boolean result = replicaSet.getMaster().isReady(Landscape.WAIT_FOR_PROCESS_TIMEOUT);
+            if (!result) {
+                setLastFailureMessage("Candidate is not ready yet");
+            }
+            return result;
         }
     }
 
@@ -174,9 +216,14 @@ public class ArchiveCandidateMonitoringBackgroundTask implements Runnable {
 
         @Override
         public boolean runCheck() throws Exception {
-            return replicaSet.getMaster().getLastMinuteSystemLoadAverage(Landscape.WAIT_FOR_PROCESS_TIMEOUT) < MAXIMUM_ONE_MINUTE_SYSTEM_LOAD_AVERAGE;
+            final double lastMinuteSystemLoadAverage = replicaSet.getMaster().getLastMinuteSystemLoadAverage(Landscape.WAIT_FOR_PROCESS_TIMEOUT);
+            final boolean result = lastMinuteSystemLoadAverage < MAXIMUM_ONE_MINUTE_SYSTEM_LOAD_AVERAGE;
+            if (!result) {
+                setLastFailureMessage("Candidate has too high system load average of "+lastMinuteSystemLoadAverage+
+                        " which is still above the maximum of "+MAXIMUM_ONE_MINUTE_SYSTEM_LOAD_AVERAGE);
+            }
+            return result;
         }
-        
     }
     
     private class HasShortEnoughDefaultBackgroundThreadPoolExecutorQueue extends AbstractCheck {
@@ -188,7 +235,13 @@ public class ArchiveCandidateMonitoringBackgroundTask implements Runnable {
 
         @Override
         public boolean runCheck() throws Exception {
-            return replicaSet.getMaster().getDefaultBackgroundThreadPoolExecutorQueueSize(Landscape.WAIT_FOR_PROCESS_TIMEOUT) < MAXIMUM_THREAD_POOL_QUEUE_SIZE;
+            final int defaultBackgroundThreadPoolExecutorQueueSize = replicaSet.getMaster().getDefaultBackgroundThreadPoolExecutorQueueSize(Landscape.WAIT_FOR_PROCESS_TIMEOUT);
+            final boolean result = defaultBackgroundThreadPoolExecutorQueueSize < MAXIMUM_THREAD_POOL_QUEUE_SIZE;
+            if (!result) {
+                setLastFailureMessage("Candidate has too many tasks in default background thread pool executor queue: "+defaultBackgroundThreadPoolExecutorQueueSize+
+                        " which is still above the maximum of "+MAXIMUM_THREAD_POOL_QUEUE_SIZE);
+            }
+            return result;
         }
     }
 
@@ -201,7 +254,13 @@ public class ArchiveCandidateMonitoringBackgroundTask implements Runnable {
 
         @Override
         public boolean runCheck() throws Exception {
-            return replicaSet.getMaster().getDefaultForegroundThreadPoolExecutorQueueSize(Landscape.WAIT_FOR_PROCESS_TIMEOUT) < MAXIMUM_THREAD_POOL_QUEUE_SIZE;
+            final int defaultForegroundThreadPoolExecutorQueueSize = replicaSet.getMaster().getDefaultForegroundThreadPoolExecutorQueueSize(Landscape.WAIT_FOR_PROCESS_TIMEOUT);
+            final boolean result = defaultForegroundThreadPoolExecutorQueueSize < MAXIMUM_THREAD_POOL_QUEUE_SIZE;
+            if (!result) {
+                setLastFailureMessage("Candidate has too many tasks in default foreground thread pool executor queue: "+defaultForegroundThreadPoolExecutorQueueSize+
+                        " which is still above the maximum of "+MAXIMUM_THREAD_POOL_QUEUE_SIZE);
+            }
+            return result;
         }
     }
     
@@ -209,28 +268,37 @@ public class ArchiveCandidateMonitoringBackgroundTask implements Runnable {
         private static final long serialVersionUID = -5271988056894947109L;
 
         public CompareServersWithRestAPI() {
-            super("compare servers with REST API", LONG_TIMEOUT, DELAY_BETWEEN_CHECKS);
+            super("compare servers with REST API", SERVER_COMPARISON_TIMEOUT, DELAY_BETWEEN_COMPARISON_CHECKS);
         }
-
 
         @Override
         public boolean runCheck() throws Exception {
-            // TODO Auto-generated method stub
-            return false;
+            final SailingServer productionServer = landscapeService.getSailingServerFactory().getSailingServer(new URL("https", replicaSet.getHostname(), "/"), effectiveBearerToken);
+            final SailingServer candidateServer = landscapeService.getSailingServerFactory().getSailingServer(new URL("https", candidateHostname, "/"), effectiveBearerToken);
+            final CompareServersResult comparisonResult = candidateServer.compareServers(Optional.empty(), productionServer, Optional.empty());
+            if (comparisonResult.hasDiffs()) {
+                setLastFailureMessage(
+                        "Candidate server does not match production server according to REST API comparison."
+                                + "\nDifferences on candidate side: " + comparisonResult.getADiffs()
+                                + "\nDifferences on production side: " + comparisonResult.getBDiffs()
+                                + "\nNot proceeding further. You need to resolve the issues manually."); // TODO add link to running REST API comparison in browser
+            }
+            return !comparisonResult.hasDiffs();
         }
     }
     
-    private class CompareServersByLeaderboardGroups extends AbstractCheck {
-        private static final long serialVersionUID = -5271988056894947109L;
+    private void notifyProcessOwnerCandidateFailedToBecomeReadyForProduction() throws MailException {
+        landscapeService.sendMailToUser(currentUser, "NewArchiveCandidateFailedSubject",
+                "NewArchiveCandidateFailedBody", replicaSet.getServerName(), currentCheck.getName(),
+                currentCheck.getLastFailureMessage());
+    }
 
-        public CompareServersByLeaderboardGroups() {
-            super("compare servers with Leaderboard Groups", LONG_TIMEOUT, DELAY_BETWEEN_CHECKS);
-        }
+    private void notifyProcessOwnerCandidateIsReadyForProduction() throws MailException {
+        // TODO send a mail to the process owner that the candidate is ready for production, comparisons were OK, remaining is an optional spot-checke (human in the loop). Include links for spot-checking and triggering the rotation
+    }
 
-        @Override
-        public boolean runCheck() throws Exception {
-            // TODO Auto-generated method stub
-            return false;
-        }
+    private void sendMailAboutNewArchiveCandidate() throws MailException {
+        landscapeService.sendMailToUser(currentUser, "StartingNewArchiveCandidateSubject", "StartingNewArchiveCandidateBody", replicaSet.getServerName());
+        landscapeService.sendMailToReplicaSetOwner(replicaSet, "RefrainFromArchivingSubject", "RefrainFromArchivingBody", Optional.empty());
     }
 }

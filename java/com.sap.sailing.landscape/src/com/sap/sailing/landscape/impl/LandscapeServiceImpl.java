@@ -25,7 +25,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.http.client.ClientProtocolException;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.AuthorizationException;
 import org.json.simple.parser.ParseException;
 import org.osgi.framework.BundleContext;
@@ -134,7 +133,7 @@ import software.amazon.awssdk.services.sts.model.Credentials;
 public class LandscapeServiceImpl implements LandscapeService {
     private static final Logger logger = Logger.getLogger(LandscapeServiceImpl.class.getName());
     
-    private static final String STRING_MESSAGES_BASE_NAME = "stringmessages/SailingLandscape_StringMessages";
+    public static final String STRING_MESSAGES_BASE_NAME = "stringmessages/SailingLandscape_StringMessages";
 
     private static final String TEMPORARY_UPGRADE_REPLICA_NAME_SUFFIX = " (Upgrade Replica)";
 
@@ -243,12 +242,13 @@ public class LandscapeServiceImpl implements LandscapeService {
             String optionalKeyName, byte[] privateKeyEncryptionPassphrase, String securityServiceReplicationBearerToken, String replicaReplicationBearerToken,
             String optionalDomainName, Integer optionalMemoryInMegabytesOrNull,
             Integer optionalMemoryTotalSizeFactorOrNull, Integer optionalIgtimiRiotPort) throws Exception {
+        assert getSecurityService().getCurrentUser() != null;
         final AwsLandscape<String> landscape = getLandscape();
-        final String hostname = getHostname(SharedLandscapeConstants.ARCHIVE_CANDIDATE_SUBDOMAIN, optionalDomainName);
-        final Iterable<ResourceRecordSet> existingDNSRulesForHostname = landscape.getResourceRecordSets(hostname);
+        final String candidateHostname = getHostname(SharedLandscapeConstants.ARCHIVE_CANDIDATE_SUBDOMAIN, optionalDomainName);
+        final Iterable<ResourceRecordSet> existingDNSRulesForHostname = landscape.getResourceRecordSets(candidateHostname);
         // Failing early in case DNS record already exists (see also bug 5826):
         if (existingDNSRulesForHostname != null && !Util.isEmpty(existingDNSRulesForHostname)) {
-            throw new IllegalArgumentException("DNS record for "+hostname+" already exists");
+            throw new IllegalArgumentException("DNS record for "+candidateHostname+" already exists");
         }
         final AwsRegion region = new AwsRegion(regionId, landscape);
         final Release release = getRelease(releaseNameOrNullForLatestMaster);
@@ -281,13 +281,13 @@ public class LandscapeServiceImpl implements LandscapeService {
         final ReverseProxy<String, SailingAnalyticsMetrics, SailingAnalyticsProcess<String>, RotatingFileBasedLog> reverseProxyCluster =
                 getLandscape().getCentralReverseProxy(region);
         final String privateIpAdress = master.getHost().getPrivateAddress().getHostAddress();
-        logger.info("Adding reverse proxy rule for archive candidate with hostname "+ hostname + " and private ip address " + privateIpAdress);
-        reverseProxyCluster.setPlainRedirect(hostname, master, Optional.ofNullable(optionalKeyName), privateKeyEncryptionPassphrase);
+        logger.info("Adding reverse proxy rule for archive candidate with hostname "+ candidateHostname + " and private ip address " + privateIpAdress);
+        reverseProxyCluster.setPlainRedirect(candidateHostname, master, Optional.ofNullable(optionalKeyName), privateKeyEncryptionPassphrase);
         sendMailAboutNewArchiveCandidate(replicaSet);
         final ScheduledExecutorService monitorTaskExecutor = ThreadPoolUtil.INSTANCE.getDefaultBackgroundTaskThreadPoolExecutor();
         final ArchiveCandidateMonitoringBackgroundTask monitoringTask = new ArchiveCandidateMonitoringBackgroundTask(
-                SecurityUtils.getSubject(), getLandscape(), replicaSet, hostname, reverseProxyCluster, optionalKeyName,
-                privateKeyEncryptionPassphrase, monitorTaskExecutor);
+                getSecurityService().getCurrentUser(), this, replicaSet, candidateHostname, reverseProxyCluster, optionalKeyName,
+                privateKeyEncryptionPassphrase, monitorTaskExecutor, bearerTokenUsedByReplicas);
         monitorTaskExecutor.execute(monitoringTask);
         return replicaSet;
     }
@@ -1740,22 +1740,28 @@ public class LandscapeServiceImpl implements LandscapeService {
     
     private void sendMailAboutNewArchiveCandidate(
             AwsApplicationReplicaSet<String, SailingAnalyticsMetrics, SailingAnalyticsProcess<String>> replicaSet) throws MailException {
-        final ResourceBundleStringMessages stringMessages = ResourceBundleStringMessages.create(STRING_MESSAGES_BASE_NAME, getClass().getClassLoader(), StandardCharsets.UTF_8.name());
-        final User currentUser = getSecurityService().getCurrentUser();
-        if (currentUser != null && currentUser.isEmailValidated()) {
-            final String subject = stringMessages.get(currentUser.getLocaleOrDefault(), "StartingNewArchiveCandidateSubject", replicaSet.getServerName());
-            final String body = stringMessages.get(currentUser.getLocaleOrDefault(), "StartingNewArchiveCandidateBody", replicaSet.getServerName());
-            getSecurityService().sendMail(currentUser.getName(), subject, body);
-        } else {
-            logger.warning("Not sending e-mail about new archive candidate to current user because no user is logged in or email address of logged in user "+
-                    (currentUser == null ? "" : currentUser.getName()+" ")+"is not validated");
-        }
+        sendMailToCurrentUser("StartingNewArchiveCandidateSubject", "StartingNewArchiveCandidateBody", replicaSet.getServerName());
         sendMailToReplicaSetOwner(replicaSet, "RefrainFromArchivingSubject", "RefrainFromArchivingBody", Optional.empty());
     }
+    
+    @Override
+    public void sendMailToCurrentUser(String messageSubjectKey, String messageBodyKey, String... messageParameters) throws MailException {
+        final User currentUser = getSecurityService().getCurrentUser();
+        sendMailToUser(currentUser, messageSubjectKey, messageBodyKey, messageParameters);
+    }
 
-    private void sendMailAboutNewArchiveServerLive(
-            AwsApplicationReplicaSet<String, SailingAnalyticsMetrics, SailingAnalyticsProcess<String>> replicaSet) throws MailException {
-        sendMailToReplicaSetOwner(replicaSet, "NewArchiveServerLiveSubject", "NewArchiveServerLiveBody", Optional.empty());
+    @Override
+    public void sendMailToUser(final User user, String messageSubjectKey, String messageBodyKey,
+            String... messageParameters) throws MailException {
+        final ResourceBundleStringMessages stringMessages = ResourceBundleStringMessages.create(STRING_MESSAGES_BASE_NAME, getClass().getClassLoader(), StandardCharsets.UTF_8.name());
+        if (user != null && user.isEmailValidated()) {
+            final String subject = stringMessages.get(user.getLocaleOrDefault(), messageSubjectKey, messageParameters);
+            final String body = stringMessages.get(user.getLocaleOrDefault(), messageBodyKey, messageParameters);
+            getSecurityService().sendMail(user.getName(), subject, body);
+        } else {
+            logger.warning("Not sending e-mail about new archive candidate to current user because no user is logged in or email address of logged in user "+
+                    (user == null ? "" : user.getName()+" ")+"is not validated");
+        }
     }
 
     private void sendMailAboutMasterUnavailable(
@@ -1778,7 +1784,8 @@ public class LandscapeServiceImpl implements LandscapeService {
      *            action on the {@code replicaSet} will receive the e-mail in addition to the server owner. No user
      *            will receive the e-mail twice.
      */
-    private void sendMailToReplicaSetOwner(
+    @Override
+    public void sendMailToReplicaSetOwner(
             AwsApplicationReplicaSet<String, SailingAnalyticsMetrics, SailingAnalyticsProcess<String>> replicaSet,
             final String subjectMessageKey, final String bodyMessageKey, Optional<Action> alsoSendToAllUsersWithThisPermissionOnReplicaSet) throws MailException {
         final Iterable<User> usersToSendMailTo = getSecurityService().getUsersToInformAboutReplicaSet(replicaSet.getServerName(), alsoSendToAllUsersWithThisPermissionOnReplicaSet);
@@ -1795,6 +1802,16 @@ public class LandscapeServiceImpl implements LandscapeService {
                         " with e-mail address "+user.getEmail()+" because e-mail address has not been validated");
             }
         }
+    }
+    
+    /**
+     * This is to be called after the rotation of candidate/production/failover ARCHIVE has happend, to inform
+     */
+    private void sendMailAboutNewArchiveServerLive(
+            AwsApplicationReplicaSet<String, SailingAnalyticsMetrics, SailingAnalyticsProcess<String>> replicaSet,
+            Optional<Action> alsoSendToAllUsersWithThisPermissionOnReplicaSet) throws MailException {
+        sendMailToReplicaSetOwner(replicaSet, "NewArchiveServerLiveSubject", "NewArchiveServerLiveBody",
+                alsoSendToAllUsersWithThisPermissionOnReplicaSet);
     }
 
     /**
@@ -2139,5 +2156,10 @@ public class LandscapeServiceImpl implements LandscapeService {
         final String memoryInMegabytesAsString = process.getEnvShValueFor(DefaultProcessConfigurationVariables.MEMORY, Landscape.WAIT_FOR_PROCESS_TIMEOUT, Optional.ofNullable(optionalKeyName), privateKeyEncryptionPassphrase);
         final Integer memoryInMegabytes = JvmUtils.getMegabytesFromJvmSize(memoryInMegabytesAsString).orElse(null);
         return memoryInMegabytes;
+    }
+
+    @Override
+    public SailingServerFactory getSailingServerFactory() {
+        return sailingServerFactoryTracker.getService();
     }
 }

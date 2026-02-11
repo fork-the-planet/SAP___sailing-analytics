@@ -17,8 +17,10 @@ import com.sap.sailing.landscape.procedures.SailingProcessConfigurationVariables
 import com.sap.sailing.landscape.procedures.StartMultiServer;
 import com.sap.sailing.server.gateway.interfaces.CompareServersResult;
 import com.sap.sailing.server.gateway.interfaces.SailingServer;
+import com.sap.sailing.server.gateway.interfaces.SailingServerFactory;
 import com.sap.sse.common.Duration;
 import com.sap.sse.common.Util.Triple;
+import com.sap.sse.common.mail.MailException;
 import com.sap.sse.landscape.Release;
 import com.sap.sse.landscape.application.ApplicationReplicaSet;
 import com.sap.sse.landscape.aws.AmazonMachineImage;
@@ -29,6 +31,8 @@ import com.sap.sse.landscape.aws.impl.AwsRegion;
 import com.sap.sse.landscape.mongodb.Database;
 import com.sap.sse.landscape.mongodb.MongoEndpoint;
 import com.sap.sse.security.SecurityService;
+import com.sap.sse.security.shared.HasPermissions.Action;
+import com.sap.sse.security.shared.impl.User;
 
 import software.amazon.awssdk.services.autoscaling.model.AutoScalingGroup;
 import software.amazon.awssdk.services.ec2.model.InstanceType;
@@ -492,4 +496,27 @@ public interface LandscapeService {
             String optionalKeyName, byte[] privateKeyEncryptionPassphrase) throws Exception;
 
     String getHostname(String replicaSetName, String optionalDomainName);
+
+    /**
+     * @param subjectMessageKey
+     *            must have a single placeholder argument representing the name of the replica set
+     * @param bodyMessageKey
+     *            must have a single placeholder argument representing the name of the replica set
+     * @param alsoSendToAllUsersWithThisPermissionOnReplicaSet
+     *            when not empty, all users that have permission to this {@link SecuredSecurityTypes#SERVER SERVER}
+     *            action on the {@code replicaSet} will receive the e-mail in addition to the server owner. No user
+     *            will receive the e-mail twice.
+     */
+    void sendMailToReplicaSetOwner(
+            AwsApplicationReplicaSet<String, SailingAnalyticsMetrics, SailingAnalyticsProcess<String>> replicaSet,
+            String subjectMessageKey, String bodyMessageKey,
+            Optional<Action> alsoSendToAllUsersWithThisPermissionOnReplicaSet) throws MailException;
+
+    void sendMailToCurrentUser(String messageSubjectKey, String messageBodyKey, String... messageParameters)
+            throws MailException;
+
+    void sendMailToUser(User user, String messageSubjectKey, String messageBodyKey, String... messageParameters)
+            throws MailException;
+    
+    SailingServerFactory getSailingServerFactory();
 }
