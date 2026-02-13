@@ -359,14 +359,21 @@ public class LandscapeServiceImpl implements LandscapeService {
                 + archiveAndFailoverIPs.getA() + ". Turning production into failover and candidate into production.");
         reverseProxyCluster.setArchiveAndFailoverIPs(candidate.getHost().getPrivateAddress().getHostAddress(),
                 archiveAndFailoverIPs.getA(), Optional.ofNullable(optionalKeyName), privateKeyEncryptionPassphrase);
-        final SailingAnalyticsHost<String> oldFailover = getLandscape().getHostByPrivateDnsNameOrIpAddress(region,
-                archiveAndFailoverIPs.getB(), new SailingAnalyticsHostSupplier<>());
-        logger.info("Terminating old failover host " + oldFailover.getInstanceId() + " with internal IP "
-                + oldFailover.getPrivateAddress());
-        oldFailover.setTerminationProtection(false);
-        oldFailover.terminate();
+        final SailingAnalyticsHost<String> oldProductionArchive = getLandscape().getHostByPrivateDnsNameOrIpAddress(region, archiveAndFailoverIPs.getA(), new SailingAnalyticsHostSupplier<>());
+        getLandscape().setInstanceName(oldProductionArchive, SharedLandscapeConstants.ARCHIVE_SERVER_FAILOVER_INSTANCE_NAME);
+        getLandscape().setInstanceName(candidate.getHost(), SharedLandscapeConstants.ARCHIVE_SERVER_INSTANCE_NAME);
         logger.info("Removing reverse proxy rule for archive candidate with hostname "+ candidateHostname);
         reverseProxyCluster.removeRedirect(candidateHostname, Optional.ofNullable(optionalKeyName), privateKeyEncryptionPassphrase);
+        try {
+            final SailingAnalyticsHost<String> oldFailover = getLandscape().getHostByPrivateDnsNameOrIpAddress(region,
+                    archiveAndFailoverIPs.getB(), new SailingAnalyticsHostSupplier<>());
+            logger.info("Terminating old failover host " + oldFailover.getInstanceId() + " with internal IP "
+                    + oldFailover.getPrivateAddress());
+            oldFailover.setTerminationProtection(false);
+            oldFailover.terminate();
+        } catch (Exception e) {
+            logger.warning("Issue trying to clean up old failover instance: "+e.getMessage());
+        }
         sendMailAboutNewArchiveServerLive(archiveReplicaSet);
     }
     

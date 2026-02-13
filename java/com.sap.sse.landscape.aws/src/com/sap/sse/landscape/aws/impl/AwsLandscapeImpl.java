@@ -1077,6 +1077,13 @@ public class AwsLandscapeImpl<ShardingKey> implements AwsLandscape<ShardingKey> 
     }
 
     @Override
+    public void setInstanceName(AwsInstance<ShardingKey> host, String newInstanceName) {
+        logger.info("Setting Name tag for instance "+host+" to "+newInstanceName);
+        getEc2Client(getRegion(host.getAvailabilityZone().getRegion()))
+                .createTags(b -> b.tags(Tag.builder().key("Name").value(newInstanceName).build()));
+    }
+
+    @Override
     public void terminate(AwsInstance<ShardingKey> host) {
         logger.info("Terminating instance "+host);
         getEc2Client(getRegion(host.getAvailabilityZone().getRegion())).terminateInstances(

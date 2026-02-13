@@ -133,5 +133,6 @@ public interface ReverseProxy<ShardingKey, MetricsT extends ApplicationProcessMe
      */
     Pair<String, String> getArchiveAndFailoverIPs(Optional<String> optionalKeyName, byte[] privateKeyEncryptionPassphrase) throws Exception;
 
-    void setArchiveAndFailoverIPs(String hostAddress, String b, Optional<String> ofNullable, byte[] privateKeyEncryptionPassphrase) throws Exception;
+    void setArchiveAndFailoverIPs(String productionArchiveServerInternalIPAddress, String failoverArchiveServerInternalIPAddress,
+            Optional<String> ofNullable, byte[] privateKeyEncryptionPassphrase) throws Exception;
 }

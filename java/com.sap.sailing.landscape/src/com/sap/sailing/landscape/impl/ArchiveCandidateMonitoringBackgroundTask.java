@@ -291,6 +291,6 @@ public class ArchiveCandidateMonitoringBackgroundTask implements Runnable {
     private void notifyProcessOwnerCandidateIsReadyForSpotChecksAndRotation() throws MailException, InterruptedException, ExecutionException {
         landscapeService.sendMailToUser(currentUser, "NewArchiveCandidateReadyForSpotChecksAndRotationSubject",
                 "NewArchiveCandidateReadyForSpotChecksAndRotationBody", replicaSet.getName(), candidateHostname,
-                replicaSet.getHostname(), Util.joinStrings("\n", Util.map(checks, Check::getName)));
+                replicaSet.getHostname(), " - "+Util.joinStrings("\n - ", Util.map(checks, Check::getName)));
     }
 }
