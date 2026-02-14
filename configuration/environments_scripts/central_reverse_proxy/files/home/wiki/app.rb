@@ -8,10 +8,13 @@ class App < Precious::App
   before { authenticate! }
   before /edit/ do   authorize_write ; end
   before do
+        if @user
         session['gollum.author'] = {
-            :name => settings.loggedInUser,
-            :email => settings.loggedInUserEmail,
+          :name => @user.name,
+          :email => @user.email
         }
+        end
+  end
   end
 
   helpers do
@@ -39,9 +42,7 @@ class App < Precious::App
         throw(:halt, [403, 'Forbidden - You can not access anything outside wiki/ path.'])
       end
       if @auth.provided? && @auth.basic? && @auth.credentials && (@user = get_user(@auth.credentials))
-        Precious::App.set(:loggedInUser, @user.name)
-        Precious::App.set(:loggedInUserEmail, @user.email)
-        return
+        return 
       else
         response['WWW-Authenticate'] = %(Basic realm="Gollum Wiki")
         throw(:halt, [401, "Not authorized\n"])
