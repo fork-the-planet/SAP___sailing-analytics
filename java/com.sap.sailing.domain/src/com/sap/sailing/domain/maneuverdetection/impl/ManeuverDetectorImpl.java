@@ -190,7 +190,7 @@ public class ManeuverDetectorImpl extends AbstractManeuverDetectorImpl {
      * Checks whether {@code currentFix} can be grouped together with the previous fixes in order to be regarded as a
      * single maneuver spot. For this, the {@code newCourseChangeDirection must match the direction of provided {@code
      * lastCourseChangeDirection}. Additionally, the distance from {@code previousFix} to {@code currentFix} must be <=
-     * 5 hull lengths, or the time difference <= 2*getApproximatedManeuverDuration().
+     * 4 hull lengths, or the time difference <= getApproximatedManeuverDuration().
      * 
      * @param lastCourseChangeDirection The last course within previous three fixes counting from {@code currentFix}
      * 
@@ -209,10 +209,10 @@ public class ManeuverDetectorImpl extends AbstractManeuverDetectorImpl {
         if (lastCourseChangeDirection != newCourseChangeDirection) {
             result = false;
         } else {
-            Distance threeHullLengths = trackedRace.getRace().getBoatOfCompetitor(competitor).getBoatClass().getHullLength().scale(5);
+            Distance fourHullLengths = trackedRace.getRace().getBoatOfCompetitor(competitor).getBoatClass().getHullLength().scale(4);
             if (currentFix.getTimePoint().asMillis()
-                    - previousFix.getTimePoint().asMillis() > getApproximateManeuverDuration().asMillis()*2
-                    && currentFix.getPosition().getDistance(previousFix.getPosition()).compareTo(threeHullLengths) > 0) {
+                    - previousFix.getTimePoint().asMillis() > getApproximateManeuverDuration().asMillis()
+                    && currentFix.getPosition().getDistance(previousFix.getPosition()).compareTo(fourHullLengths) > 0) {
                 result = false;
             } else {
                 result = true;
