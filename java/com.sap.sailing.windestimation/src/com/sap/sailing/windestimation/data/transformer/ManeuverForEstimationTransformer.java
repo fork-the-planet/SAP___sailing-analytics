@@ -182,7 +182,7 @@ public class ManeuverForEstimationTransformer
                 deviationFromOptimalTackAngleInDegrees, deviationFromOptimalJibeAngleInDegrees, speedLossRatio,
                 speedGainRatio, lowestSpeedVsExitingSpeedRatio, clean, maneuverCategory, scaledSpeedBeforeInKnots,
                 scaledSpeedAfterInKnots, maneuver.isMarkPassing(), boatClass, markPassingDataAvailable,
-                competitor.getName());
+                competitor==null?null:competitor.getName());
         return maneuverForEstimation;
     }
 
