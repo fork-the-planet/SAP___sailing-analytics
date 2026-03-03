@@ -247,24 +247,7 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
             final GPSFixMoving result;
             final SpeedWithBearing nextSpeed = next.isEstimatedSpeedCached() ? next.getCachedEstimatedSpeed() : track.getEstimatedSpeed(next.getTimePoint());
             if (logFixes) {
-                final boolean validityCached = next.isValidityCached();
-                final boolean validity;
-                if (validityCached) {
-                    validity = next.isValidCached();
-                } else {
-                    track.lockForRead();
-                    try {
-                        validity = track.isValid(next);
-                    } finally {
-                        track.unlockAfterRead();
-                    }
-                }
-                // CSV logging: approxId, fixIndex, fixTimeMillis, validityCached, speedCached, COG, SOG
-                System.out.println(System.identityHashCode(this) + "," + next.getTimePoint().asMillis() + ","
-                        + next.isValidityCached() + "," + next.isEstimatedSpeedCached() + ","
-                        + (nextSpeed == null ? "null" : nextSpeed.getBearing().getDegrees()) + ","
-                        + (nextSpeed == null ? "null" : nextSpeed.getKnots()) + ","
-                        + validityCached + "," + validity);
+                logFix(next, nextSpeed);
             }
             if (nextSpeed != null) {
                 numberOfFixesAdded++;
@@ -320,6 +303,27 @@ public class CourseChangeBasedTrackApproximation implements Serializable, GPSTra
                 result = null;
             }
             return result; 
+        }
+
+        private void logFix(GPSFixMoving next, final SpeedWithBearing nextSpeed) {
+            final boolean validityCached = next.isValidityCached();
+            final boolean validity;
+            if (validityCached) {
+                validity = next.isValidCached();
+            } else {
+                track.lockForRead();
+                try {
+                    validity = track.isValid(next);
+                } finally {
+                    track.unlockAfterRead();
+                }
+            }
+            // CSV logging: approxId, fixIndex, fixTimeMillis, validityCached, speedCached, COG, SOG
+            System.out.println(System.identityHashCode(this) + "," + next.getTimePoint().asMillis() + ","
+                    + next.isValidityCached() + "," + next.isEstimatedSpeedCached() + ","
+                    + (nextSpeed == null ? "null" : nextSpeed.getBearing().getDegrees()) + ","
+                    + (nextSpeed == null ? "null" : nextSpeed.getKnots()) + ","
+                    + validityCached + "," + validity);
         }
 
         /**
