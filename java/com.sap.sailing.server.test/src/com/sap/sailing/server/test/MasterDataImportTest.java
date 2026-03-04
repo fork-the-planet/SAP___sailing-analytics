@@ -35,6 +35,7 @@ import javax.ws.rs.core.StreamingOutput;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.Subject;
+import org.apache.shiro.util.ThreadContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -194,6 +195,8 @@ public class MasterDataImportTest {
 
     @AfterEach
     public void tearDown() {
+        ThreadContext.unbindSecurityManager();
+        ThreadContext.unbindSubject();
         deleteAllDataFromDatabase();
     }
 
@@ -205,8 +208,15 @@ public class MasterDataImportTest {
         securityService = Mockito.mock(SecurityService.class);
         SecurityManager securityManager = Mockito.mock(org.apache.shiro.mgt.SecurityManager.class);
         Subject fakeSubject = Mockito.mock(Subject.class);
-        SecurityUtils.setSecurityManager(securityManager);
+        // Stub the mock BEFORE installing it as the global SecurityManager to avoid a race
+        // condition where a background thread (from RacingEventServiceImpl's static
+        // ScheduledExecutorService) calls SecurityUtils.getSubject(), which triggers
+        // createSubject() on the mock while Mockito is still in the middle of setting up
+        // the doReturn().when() stubbing. The background thread consumes/corrupts
+        // Mockito's doAnswer-style answers on the mock's InvocationContainer, causing
+        // an AssertionError in InvocationContainerImpl.setMethodForStubbing.
         Mockito.doReturn(fakeSubject).when(securityManager).createSubject(Mockito.any());
+        SecurityUtils.setSecurityManager(securityManager);
         Mockito.doReturn(defaultTenant).when(securityService).getServerGroup();
         Mockito.doReturn(currentUser).when(securityService).getCurrentUser();
         Mockito.doReturn(true).when(securityService).hasCurrentUserReadPermission(Mockito.any());
