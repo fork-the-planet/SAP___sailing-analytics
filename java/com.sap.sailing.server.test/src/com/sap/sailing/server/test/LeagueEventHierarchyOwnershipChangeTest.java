@@ -2,6 +2,7 @@ package com.sap.sailing.server.test;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.util.Collections;
 import java.util.Locale;
@@ -141,6 +142,37 @@ public class LeagueEventHierarchyOwnershipChangeTest {
         final OwnershipAnnotation lg2Ownership = securityService.getOwnership(leaderboardGroup2.getIdentifier());
         final OwnershipAnnotation eventOwnership = securityService.getOwnership(event.getIdentifier());
         assertSame(eventOwnership.getAnnotation().getTenantOwner(), lg2Ownership.getAnnotation().getTenantOwner());
+    }
+
+    @Test
+    public void testCyclicLeagueHierarchyOwnershipChangeStartingAtEventTerminates() {
+        final Event otherEvent = service.addEvent("Test2", "Test Event 2", TimePoint.now(), TimePoint.now().plus(Duration.ONE_WEEK), "There",
+                /* isPublic */ true, UUID.randomUUID());
+        otherEvent.getVenue().addCourseArea(defaultCourseArea);
+        try {
+            final LeaderboardGroup sharedLeaderboardGroup = new LeaderboardGroupImpl("LG-shared", "LGDesc-shared",
+                    "The shared LG", /* displayGroupsInReverseOrder */ false, Collections.emptyList());
+            final Leaderboard sharedOverallLeaderboard = new LeaderboardGroupMetaLeaderboard(sharedLeaderboardGroup, new LowPoint(),
+                    new ThresholdBasedResultDiscardingRuleImpl(new int[0]));
+            sharedLeaderboardGroup.setOverallLeaderboard(sharedOverallLeaderboard);
+            sharedLeaderboardGroup.addLeaderboard(new FlexibleLeaderboardImpl("SharedFlexibleLeaderboard",
+                    new ThresholdBasedResultDiscardingRuleImpl(new int[0]), new LowPoint(), defaultCourseArea));
+            event.addLeaderboardGroup(sharedLeaderboardGroup);
+            otherEvent.addLeaderboardGroup(sharedLeaderboardGroup);
+
+            assertTimeoutPreemptively(java.time.Duration.ofSeconds(5), () -> SailingHierarchyOwnershipUpdater
+                    .createOwnershipUpdater(/* createNewGroup */ true, /* existingGroupIdOrNull */ null,
+                            THE_NEW_OWNING_GROUP_NAME, /* migrateCompetitors */ true, /* migrateBoats */ true,
+                            /* copyMembersAndRoles */ true, service)
+                    .updateGroupOwnershipForEventHierarchy(event));
+
+            final OwnershipAnnotation eventOwnership = securityService.getOwnership(event.getIdentifier());
+            final OwnershipAnnotation otherEventOwnership = securityService.getOwnership(otherEvent.getIdentifier());
+            assertSame(eventOwnership.getAnnotation().getTenantOwner(),
+                    otherEventOwnership.getAnnotation().getTenantOwner());
+        } finally {
+            service.removeEvent(otherEvent.getId());
+        }
     }
     
     @AfterEach

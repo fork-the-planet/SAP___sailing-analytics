@@ -65,6 +65,9 @@ public class SailingHierarchyOwnershipUpdater {
     private final boolean updateCompetitors;
     private final boolean updateBoats;
     private final Set<QualifiedObjectIdentifier> objectsToUpdateOwnershipsFor;
+    private final Set<QualifiedObjectIdentifier> visitedEvents;
+    private final Set<QualifiedObjectIdentifier> visitedLeaderboardGroups;
+    private final Set<QualifiedObjectIdentifier> visitedLeaderboards;
 
     private SailingHierarchyOwnershipUpdater(final RacingEventService service, SecurityService securityService,
             final GroupOwnerUpdateStrategy updateStrategy, final boolean updateCompetitors, final boolean updateBoats) {
@@ -74,6 +77,9 @@ public class SailingHierarchyOwnershipUpdater {
         this.updateCompetitors = updateCompetitors;
         this.updateBoats = updateBoats;
         objectsToUpdateOwnershipsFor = new HashSet<>();
+        visitedEvents = new HashSet<>();
+        visitedLeaderboardGroups = new HashSet<>();
+        visitedLeaderboards = new HashSet<>();
     }
 
     public void updateGroupOwnershipForEventHierarchy(Event event) {
@@ -82,6 +88,9 @@ public class SailingHierarchyOwnershipUpdater {
     }
 
     private void updateGroupOwnershipForEventHierarchyInternal(Event event) {
+        if (!visitedEvents.add(event.getIdentifier())) {
+            return;
+        }
         updateGroupOwner(event.getIdentifier());
         SailingHierarchyWalker.walkFromEvent(event, /* includeLeaderboardGroupsWithOverallLeaderboard */ false,
                 new EventHierarchyVisitor() {
@@ -106,6 +115,9 @@ public class SailingHierarchyOwnershipUpdater {
     }
 
     private void updateGroupOwnershipForLeaderboardGroupHierarchyInternal(LeaderboardGroup leaderboardGroup, Event eventToExclude) {
+        if (!visitedLeaderboardGroups.add(leaderboardGroup.getIdentifier())) {
+            return;
+        }
         updateGroupOwner(leaderboardGroup.getIdentifier());
         SailingHierarchyWalker.walkFromLeaderboardGroup(service, leaderboardGroup,
                 /* includeEventsIfLeaderboardGroupHasOverallLeaderboard */ true,
@@ -132,6 +144,9 @@ public class SailingHierarchyOwnershipUpdater {
     }
     
     private void updateGroupOwnershipForLeaderboardHierarchyInternal(Leaderboard leaderboard) {
+        if (!visitedLeaderboards.add(leaderboard.getIdentifier())) {
+            return;
+        }
         updateGroupOwner(leaderboard.getIdentifier());
         if (leaderboard instanceof RegattaLeaderboard) {
             RegattaLeaderboard regattaLeaderboard = (RegattaLeaderboard) leaderboard;
