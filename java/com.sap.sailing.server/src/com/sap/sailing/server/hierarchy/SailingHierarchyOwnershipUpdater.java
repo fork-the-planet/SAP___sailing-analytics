@@ -65,9 +65,9 @@ public class SailingHierarchyOwnershipUpdater {
     private final boolean updateCompetitors;
     private final boolean updateBoats;
     private final Set<QualifiedObjectIdentifier> objectsToUpdateOwnershipsFor;
-    private final Set<QualifiedObjectIdentifier> visitedEvents;
-    private final Set<QualifiedObjectIdentifier> visitedLeaderboardGroups;
-    private final Set<QualifiedObjectIdentifier> visitedLeaderboards;
+    private final Set<Event> visitedEvents;
+    private final Set<LeaderboardGroup> visitedLeaderboardGroups;
+    private final Set<Leaderboard> visitedLeaderboards;
 
     private SailingHierarchyOwnershipUpdater(final RacingEventService service, SecurityService securityService,
             final GroupOwnerUpdateStrategy updateStrategy, final boolean updateCompetitors, final boolean updateBoats) {
@@ -88,25 +88,24 @@ public class SailingHierarchyOwnershipUpdater {
     }
 
     private void updateGroupOwnershipForEventHierarchyInternal(Event event) {
-        if (!visitedEvents.add(event.getIdentifier())) {
-            return;
+        if (visitedEvents.add(event)) {
+            updateGroupOwner(event.getIdentifier());
+            SailingHierarchyWalker.walkFromEvent(event, /* includeLeaderboardGroupsWithOverallLeaderboard */ false,
+                    new EventHierarchyVisitor() {
+                @Override
+                public void visit(Leaderboard leaderboard, Set<LeaderboardGroup> leaderboardGroups) {
+                    updateGroupOwnershipForLeaderboardHierarchyInternal(leaderboard);
+                }
+    
+                @Override
+                public void visit(LeaderboardGroup leaderboardGroup) {
+                    // leaderboard groups with overall leaderboard may be visited if all their leaderboards belong
+                    // to the "event", but the process won't recurse back into "event" as we pass it explicitly as
+                    // an event not to visit
+                    updateGroupOwnershipForLeaderboardGroupHierarchyInternal(leaderboardGroup, /* exclude */ event);
+                }
+            });
         }
-        updateGroupOwner(event.getIdentifier());
-        SailingHierarchyWalker.walkFromEvent(event, /* includeLeaderboardGroupsWithOverallLeaderboard */ false,
-                new EventHierarchyVisitor() {
-            @Override
-            public void visit(Leaderboard leaderboard, Set<LeaderboardGroup> leaderboardGroups) {
-                updateGroupOwnershipForLeaderboardHierarchyInternal(leaderboard);
-            }
-
-            @Override
-            public void visit(LeaderboardGroup leaderboardGroup) {
-                // leaderboard groups with overall leaderboard may be visited if all their leaderboards belong
-                // to the "event", but the process won't recurse back into "event" as we pass it explicitly as
-                // an event not to visit
-                updateGroupOwnershipForLeaderboardGroupHierarchyInternal(leaderboardGroup, /* exclude */ event);
-            }
-        });
     }
 
     public void updateGroupOwnershipForLeaderboardGroupHierarchy(LeaderboardGroup leaderboardGroup) {
@@ -115,27 +114,26 @@ public class SailingHierarchyOwnershipUpdater {
     }
 
     private void updateGroupOwnershipForLeaderboardGroupHierarchyInternal(LeaderboardGroup leaderboardGroup, Event eventToExclude) {
-        if (!visitedLeaderboardGroups.add(leaderboardGroup.getIdentifier())) {
-            return;
-        }
-        updateGroupOwner(leaderboardGroup.getIdentifier());
-        SailingHierarchyWalker.walkFromLeaderboardGroup(service, leaderboardGroup,
-                /* includeEventsIfLeaderboardGroupHasOverallLeaderboard */ true,
-                new LeaderboardGroupHierarchyVisitor() {
-                    @Override
-                    public void visit(Leaderboard leaderboard) {
-                        updateGroupOwnershipForLeaderboardHierarchyInternal(leaderboard);
-                    }
-
-                    @Override
-                    public void visit(Event event) {
-                        if (event != eventToExclude) {
-                            // Only events of LeaderboardGroups with overall leaderboard are visited -> no infinite
-                            // recursion occurs
-                            updateGroupOwnershipForEventHierarchyInternal(event);
+        if (visitedLeaderboardGroups.add(leaderboardGroup)) {
+            updateGroupOwner(leaderboardGroup.getIdentifier());
+            SailingHierarchyWalker.walkFromLeaderboardGroup(service, leaderboardGroup,
+                    /* includeEventsIfLeaderboardGroupHasOverallLeaderboard */ true,
+                    new LeaderboardGroupHierarchyVisitor() {
+                        @Override
+                        public void visit(Leaderboard leaderboard) {
+                            updateGroupOwnershipForLeaderboardHierarchyInternal(leaderboard);
                         }
-                    }
-                });
+    
+                        @Override
+                        public void visit(Event event) {
+                            if (event != eventToExclude) {
+                                // Only events of LeaderboardGroups with overall leaderboard are visited -> no infinite
+                                // recursion occurs
+                                updateGroupOwnershipForEventHierarchyInternal(event);
+                            }
+                        }
+                    });
+        }
     }
 
     public void updateGroupOwnershipForLeaderboardHierarchy(Leaderboard leaderboard) {
@@ -144,34 +142,33 @@ public class SailingHierarchyOwnershipUpdater {
     }
     
     private void updateGroupOwnershipForLeaderboardHierarchyInternal(Leaderboard leaderboard) {
-        if (!visitedLeaderboards.add(leaderboard.getIdentifier())) {
-            return;
-        }
-        updateGroupOwner(leaderboard.getIdentifier());
-        if (leaderboard instanceof RegattaLeaderboard) {
-            RegattaLeaderboard regattaLeaderboard = (RegattaLeaderboard) leaderboard;
-            updateGroupOwner(regattaLeaderboard.getRegatta().getIdentifier());
-        }
-        SailingHierarchyWalker.walkFromLeaderboard(leaderboard, new LeaderboardHierarchyVisitor() {
-            @Override
-            public void visit(TrackedRace race) {
-                updateGroupOwner(race.getIdentifier());
+        if (visitedLeaderboards.add(leaderboard)) {
+            updateGroupOwner(leaderboard.getIdentifier());
+            if (leaderboard instanceof RegattaLeaderboard) {
+                RegattaLeaderboard regattaLeaderboard = (RegattaLeaderboard) leaderboard;
+                updateGroupOwner(regattaLeaderboard.getRegatta().getIdentifier());
             }
-
-            @Override
-            public void visit(Boat boat) {
-                if (updateBoats) {
-                    updateGroupOwner(boat.getIdentifier());
+            SailingHierarchyWalker.walkFromLeaderboard(leaderboard, new LeaderboardHierarchyVisitor() {
+                @Override
+                public void visit(TrackedRace race) {
+                    updateGroupOwner(race.getIdentifier());
                 }
-            }
-
-            @Override
-            public void visit(Competitor competitor) {
-                if (updateCompetitors) {
-                    updateGroupOwner(competitor.getIdentifier());
+    
+                @Override
+                public void visit(Boat boat) {
+                    if (updateBoats) {
+                        updateGroupOwner(boat.getIdentifier());
+                    }
                 }
-            }
-        });
+    
+                @Override
+                public void visit(Competitor competitor) {
+                    if (updateCompetitors) {
+                        updateGroupOwner(competitor.getIdentifier());
+                    }
+                }
+            });
+        }
     }
 
     private void updateGroupOwner(QualifiedObjectIdentifier id) {

@@ -159,13 +159,11 @@ public class LeagueEventHierarchyOwnershipChangeTest {
                     new ThresholdBasedResultDiscardingRuleImpl(new int[0]), new LowPoint(), defaultCourseArea));
             event.addLeaderboardGroup(sharedLeaderboardGroup);
             otherEvent.addLeaderboardGroup(sharedLeaderboardGroup);
-
             assertTimeoutPreemptively(java.time.Duration.ofSeconds(5), () -> SailingHierarchyOwnershipUpdater
                     .createOwnershipUpdater(/* createNewGroup */ true, /* existingGroupIdOrNull */ null,
                             THE_NEW_OWNING_GROUP_NAME, /* migrateCompetitors */ true, /* migrateBoats */ true,
                             /* copyMembersAndRoles */ true, service)
                     .updateGroupOwnershipForEventHierarchy(event));
-
             final OwnershipAnnotation eventOwnership = securityService.getOwnership(event.getIdentifier());
             final OwnershipAnnotation otherEventOwnership = securityService.getOwnership(otherEvent.getIdentifier());
             assertSame(eventOwnership.getAnnotation().getTenantOwner(),
