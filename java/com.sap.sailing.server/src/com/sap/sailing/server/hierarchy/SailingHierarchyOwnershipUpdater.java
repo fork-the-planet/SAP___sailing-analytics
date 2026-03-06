@@ -102,18 +102,18 @@ public class SailingHierarchyOwnershipUpdater {
                     // leaderboard groups with overall leaderboard may be visited if all their leaderboards belong
                     // to the "event", but the process won't recurse back into "event" as we pass it explicitly as
                     // an event not to visit
-                    updateGroupOwnershipForLeaderboardGroupHierarchyInternal(leaderboardGroup, /* exclude */ event);
+                    updateGroupOwnershipForLeaderboardGroupHierarchyInternal(leaderboardGroup);
                 }
             });
         }
     }
 
     public void updateGroupOwnershipForLeaderboardGroupHierarchy(LeaderboardGroup leaderboardGroup) {
-        updateGroupOwnershipForLeaderboardGroupHierarchyInternal(leaderboardGroup, /* eventToExclude */ null);
+        updateGroupOwnershipForLeaderboardGroupHierarchyInternal(leaderboardGroup);
         commitChanges();
     }
 
-    private void updateGroupOwnershipForLeaderboardGroupHierarchyInternal(LeaderboardGroup leaderboardGroup, Event eventToExclude) {
+    private void updateGroupOwnershipForLeaderboardGroupHierarchyInternal(LeaderboardGroup leaderboardGroup) {
         if (visitedLeaderboardGroups.add(leaderboardGroup)) {
             updateGroupOwner(leaderboardGroup.getIdentifier());
             SailingHierarchyWalker.walkFromLeaderboardGroup(service, leaderboardGroup,
@@ -126,11 +126,7 @@ public class SailingHierarchyOwnershipUpdater {
     
                         @Override
                         public void visit(Event event) {
-                            if (event != eventToExclude) {
-                                // Only events of LeaderboardGroups with overall leaderboard are visited -> no infinite
-                                // recursion occurs
-                                updateGroupOwnershipForEventHierarchyInternal(event);
-                            }
+                            updateGroupOwnershipForEventHierarchyInternal(event);
                         }
                     });
         }

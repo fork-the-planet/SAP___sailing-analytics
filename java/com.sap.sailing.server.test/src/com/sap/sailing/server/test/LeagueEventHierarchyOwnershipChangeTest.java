@@ -176,8 +176,11 @@ public class LeagueEventHierarchyOwnershipChangeTest {
                     .updateGroupOwnershipForEventHierarchy(event));
             final OwnershipAnnotation eventOwnership = securityService.getOwnership(event.getIdentifier());
             final OwnershipAnnotation otherEventOwnership = securityService.getOwnership(otherEvent.getIdentifier());
-            assertSame(eventOwnership.getAnnotation().getTenantOwner(),
-                    otherEventOwnership.getAnnotation().getTenantOwner());
+            assertSame(eventOwnership.getAnnotation().getTenantOwner(), otherEventOwnership.getAnnotation().getTenantOwner());
+            final OwnershipAnnotation overallLeaderboardOwnership = securityService.getOwnership(overallLeaderboard.getIdentifier());
+            assertSame(eventOwnership.getAnnotation().getTenantOwner(), overallLeaderboardOwnership.getAnnotation().getTenantOwner());
+            final OwnershipAnnotation sharedOverallLeaderboardOwnership = securityService.getOwnership(sharedOverallLeaderboard.getIdentifier());
+            assertSame(eventOwnership.getAnnotation().getTenantOwner(), sharedOverallLeaderboardOwnership.getAnnotation().getTenantOwner());
         } finally {
             service.removeEvent(otherEvent.getId());
         }
