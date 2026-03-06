@@ -19,6 +19,7 @@ import com.sap.sailing.domain.base.impl.DomainFactoryImpl;
 import com.sap.sailing.domain.common.LegType;
 import com.sap.sailing.domain.common.polars.NotEnoughDataHasBeenAddedException;
 import com.sap.sailing.polars.impl.PolarDataServiceImpl;
+import com.sap.sailing.polars.jaxrs.client.FileBasedPolarDataClient;
 
 public class PolarDataResourceTest {
     private static final Logger logger = Logger.getLogger(PolarDataResourceTest.class.getName());
@@ -35,7 +36,7 @@ public class PolarDataResourceTest {
     public void setUp() throws IOException, ParseException, ClassNotFoundException, InterruptedException {
         polarService = new PolarDataServiceImpl();
         domainFactory = new DomainFactoryImpl(/* raceLogResolver */ null);
-        final PolarDataClientMock client = new PolarDataClientMock(new File("resources/polar_data"), polarService, domainFactory);
+        final FileBasedPolarDataClient client = new FileBasedPolarDataClient(new File("resources/polar_data"), polarService, domainFactory);
         client.updatePolarDataRegressions();
         // ensure that setting the domain factory has worked
         polarService.runWithDomainFactory(domainFactory -> { 
@@ -48,7 +49,7 @@ public class PolarDataResourceTest {
     }
 
     /**
-     * Test to check if client importing data correctly. Using {@link PolarDataClientMock} which use {@link File}
+     * Test to check if client importing data correctly. Using {@link FileBasedPolarDataClient} which use {@link File}
      * polar_data.json as source
      * 
      * @throws NotEnoughDataHasBeenAddedException

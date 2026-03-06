@@ -1,4 +1,4 @@
-package com.sap.sailing.polars.jaxrs.api.test;
+package com.sap.sailing.polars.jaxrs.client;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,13 +10,12 @@ import org.json.simple.parser.ParseException;
 
 import com.sap.sailing.domain.base.DomainFactory;
 import com.sap.sailing.polars.ReplicablePolarService;
-import com.sap.sailing.polars.jaxrs.client.PolarDataClient;
 
-public class PolarDataClientMock extends PolarDataClient {
+public class FileBasedPolarDataClient extends PolarDataClient {
 
     private final File file;
 
-    public PolarDataClientMock(File file, ReplicablePolarService polarService, DomainFactory domainFactory) {
+    public FileBasedPolarDataClient(File file, ReplicablePolarService polarService, DomainFactory domainFactory) {
         super(null, polarService, Optional.empty());
         polarService.registerDomainFactory(domainFactory);
         this.file = file;
@@ -26,5 +25,4 @@ public class PolarDataClientMock extends PolarDataClient {
     protected InputStream getContentFromResponse() throws IOException, ParseException {
         return new FileInputStream(file);
     }
-
 }
