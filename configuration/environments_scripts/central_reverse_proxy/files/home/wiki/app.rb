@@ -85,17 +85,7 @@ class App < Precious::App
   end
 
   helpers do
-
-    def github_api_get(path) 
-        uri = URI::HTTPS.build(
-        host: 'api.github.com',
-        path: path)
-        RestClient.get(uri.to_s(),
-            {
-            :Authorization => "Bearer #{session[:access_token]}"
-            })
-    end
-
+    
     def public_path?(path)
         if path == "/" 
           return true
@@ -133,10 +123,30 @@ class App < Precious::App
 
     def user_can_write() 
         return false unless session[:access_token]
-        result = JSON.parse(github_api_get("/repos/#{REPO_OWNER}/#{REPO_NAME}"))
+        response =  github_api_get("/repos/#{REPO_OWNER}/#{REPO_NAME}")
+        return false unless response
+        result = JSON.parse(response)
         result.dig('permissions', 'push') == true
     rescue RestClient::ExceptionWithResponse
         false
+    end
+    def github_api_get(path) 
+        uri = URI::HTTPS.build(
+        host: 'api.github.com',
+        path: path)
+        RestClient.get(uri.to_s(),
+            {
+            :Authorization => "Bearer #{session[:access_token]}"
+            })
+    rescue RestClient::Unauthorized, RestClient::Forbidden
+        LOGGER.warn("GitHub auth failed for #{path}")
+        nil
+    rescue RestClient::ExceptionWithResponse => e
+        LOGGER.error("GitHub API error #{e.response.code} for #{path}")
+        nil
+    rescue StandardError => e
+        LOGGER.error("GitHub request failed: #{e.message}")
+        nil
     end
   end
 end
