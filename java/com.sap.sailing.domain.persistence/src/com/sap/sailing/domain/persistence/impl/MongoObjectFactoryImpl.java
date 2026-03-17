@@ -2046,6 +2046,7 @@ public class MongoObjectFactoryImpl implements MongoObjectFactory {
             if (e.getValue() != null) {
                 for (final Maneuver maneuver : e.getValue()) {
                     final Document maneuverDoc = new Document();
+                    maneuverDoc.put(FieldNames.SIMPLE_CLASS_NAME.name(), maneuver.getClass().getSimpleName());
                     maneuverDoc.put(FieldNames.TYPE.name(), maneuver.getType().name());
                     maneuverDoc.put(FieldNames.TACK.name(), maneuver.getNewTack().name());
                     maneuverDoc.put(FieldNames.POSITION_LAT_RAD.name(), maneuver.getPosition().getLatRad());
@@ -2070,12 +2071,12 @@ public class MongoObjectFactoryImpl implements MongoObjectFactory {
     
     private Document storeManeuverLoss(ManeuverLoss maneuverLoss) {
         final Document maneuverLossDoc = new Document();
-        maneuverLossDoc.put(FieldNames.MANEUVER_DISTANCE_SAILED_POMA.name(), maneuverLoss.getDistanceSailedIfNotManeuveringProjectedOnMiddleManeuverAngle().getMeters());
+        maneuverLossDoc.put(FieldNames.MANEUVER_DISTANCE_SAILED_POMA.name(), maneuverLoss.getDistanceSailedProjectedOnMiddleManeuverAngle().getMeters());
         maneuverLossDoc.put(FieldNames.MANEUVER_DISTANCE_SAILED_INMPOMA.name(), maneuverLoss.getDistanceSailedIfNotManeuveringProjectedOnMiddleManeuverAngle().getMeters());
         maneuverLossDoc.put(FieldNames.MANEUVER_START_POSITION_LAT_RAD.name(), maneuverLoss.getManeuverStartPosition().getLatRad());
         maneuverLossDoc.put(FieldNames.MANEUVER_START_POSITION_LNG_RAD.name(), maneuverLoss.getManeuverStartPosition().getLngRad());
-        maneuverLossDoc.put(FieldNames.MANEUVER_END_POSITION_LAT_RAD.name(), maneuverLoss.getManeuverStartPosition().getLngRad());
-        maneuverLossDoc.put(FieldNames.MANEUVER_END_POSITION_LNG_RAD.name(), maneuverLoss.getManeuverStartPosition().getLngRad());
+        maneuverLossDoc.put(FieldNames.MANEUVER_END_POSITION_LAT_RAD.name(), maneuverLoss.getManeuverEndPosition().getLatRad());
+        maneuverLossDoc.put(FieldNames.MANEUVER_END_POSITION_LNG_RAD.name(), maneuverLoss.getManeuverEndPosition().getLngRad());
         maneuverLossDoc.put(FieldNames.MANEUVER_SPEED_WITH_BEARING_BEFORE_DEGREES.name(), maneuverLoss.getSpeedWithBearingBefore().getBearing().getDegrees());
         maneuverLossDoc.put(FieldNames.MANEUVER_SPEED_WITH_BEARING_BEFORE_SPEED.name(), maneuverLoss.getSpeedWithBearingBefore().getKnots());
         maneuverLossDoc.put(FieldNames.MIDDLE_MAEUVER_ANGLE.name(), maneuverLoss.getMiddleManeuverAngle().getDegrees());

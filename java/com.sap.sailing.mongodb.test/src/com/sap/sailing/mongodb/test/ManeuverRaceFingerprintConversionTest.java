@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,7 @@ import com.sap.sailing.domain.persistence.PersistenceFactory;
 import com.sap.sailing.domain.persistence.impl.MongoObjectFactoryImpl;
 import com.sap.sailing.domain.test.OnlineTracTracBasedTest;
 import com.sap.sailing.domain.tracking.Maneuver;
+import com.sap.sailing.domain.tracking.ManeuverLoss;
 import com.sap.sailing.domain.tracking.impl.DynamicTrackedRaceImpl;
 import com.sap.sailing.domain.tractracadapter.ReceiverType;
 import com.sap.sse.mongodb.MongoDBConfiguration;
@@ -69,8 +71,8 @@ public class ManeuverRaceFingerprintConversionTest extends OnlineTracTracBasedTe
         final RaceIdentifier raceIdentifier = trackedRace1.getRaceIdentifier();
         final Map<Competitor, List<Maneuver>> maneuvers = new HashMap<>();
         for (final Competitor competitor : getRace().getCompetitors()) {
-            final List<Maneuver> maneuversForCompetitor = (List<Maneuver>) trackedRace1.getManeuvers(competitor, true);
-            maneuvers.put(competitor,maneuversForCompetitor);
+            final List<Maneuver> maneuversForCompetitor = (List<Maneuver>) trackedRace1.getManeuvers(competitor, /* wait for latest */ true);
+            maneuvers.put(competitor, maneuversForCompetitor);
         }
         new MongoObjectFactoryImpl(firstDatabase).storeManeuvers(raceIdentifier, fingerprint, trackedRace1.getRace().getCourse(), maneuvers);
         final DomainObjectFactory dF = PersistenceFactory.INSTANCE.getDomainObjectFactory(dbConfiguration.getService(), getDomainFactory().getBaseDomainFactory());
@@ -78,6 +80,32 @@ public class ManeuverRaceFingerprintConversionTest extends OnlineTracTracBasedTe
         final ManeuverRaceFingerprint fingerprintAfterDB = fingerprintHashMap.get(trackedRace1.getRaceIdentifier());
         assertTrue(fingerprintAfterDB.matches(trackedRace1), "Original and de-serialized copy are equal");
         final Map<Competitor, List<Maneuver>> maneuversLoaded = dF.loadManeuvers(trackedRace1, trackedRace1.getRace().getCourse());
-        assertEquals(maneuvers, maneuversLoaded);
+        assertEquals(maneuvers, maneuversLoaded); // this only checks the equality based on AbstractGPSFixImpl.equals, so lat/lng, cog/sog and time stamp
+        for (final Competitor c : maneuversLoaded.keySet()) {
+            final Iterator<Maneuver> maneuverIter = maneuvers.get(c).iterator();
+            for (final Maneuver m : maneuversLoaded.get(c)) {
+                final Maneuver maneuverDetected = maneuverIter.next();
+                assertEqualManeuverLoss(maneuverDetected.getManeuverLoss(), m.getManeuverLoss());
+                assertEquals(maneuverDetected.getAvgTurningRateInDegreesPerSecond(), m.getAvgTurningRateInDegreesPerSecond(), 0.000001);
+                assertEquals(maneuverDetected.getDirectionChangeInDegrees(), m.getDirectionChangeInDegrees());
+            }
+        }
+    }
+
+    private void assertEqualManeuverLoss(ManeuverLoss maneuverLoss1, ManeuverLoss maneuverLoss2) {
+        if (maneuverLoss1 != null) {
+            assertEquals(maneuverLoss1.getManeuverStartPosition(), maneuverLoss2.getManeuverStartPosition());
+            assertEquals(maneuverLoss1.getManeuverEndPosition(), maneuverLoss2.getManeuverEndPosition());
+            assertEquals(maneuverLoss1.getDistanceSailedIfNotManeuveringProjectedOnMiddleManeuverAngle().getMeters(),
+                    maneuverLoss2.getDistanceSailedIfNotManeuveringProjectedOnMiddleManeuverAngle().getMeters(), 0.000001);
+            assertEquals(maneuverLoss1.getDistanceSailedProjectedOnMiddleManeuverAngle().getMeters(),
+                    maneuverLoss2.getDistanceSailedProjectedOnMiddleManeuverAngle().getMeters(), 0.000001);
+            assertEquals(maneuverLoss1.getManeuverDuration().asSeconds(), maneuverLoss2.getManeuverDuration().asSeconds(), 0.000001);
+            assertEquals(maneuverLoss1.getMiddleManeuverAngle().getDegrees(), maneuverLoss2.getMiddleManeuverAngle().getDegrees(), 0.000001);
+            assertEquals(maneuverLoss1.getProjectedDistanceLost().getMeters(), maneuverLoss2.getProjectedDistanceLost().getMeters(), 0.000001);
+            assertEquals(maneuverLoss1.getRatioBetweenDistanceSailedWithAndWithoutManeuver(), maneuverLoss2.getRatioBetweenDistanceSailedWithAndWithoutManeuver(), 0.000001);
+            assertEquals(maneuverLoss1.getSpeedWithBearingBefore().getKnots(), maneuverLoss2.getSpeedWithBearingBefore().getKnots(), 0.000001);
+            assertEquals(maneuverLoss1.getSpeedWithBearingBefore().getBearing().getDegrees(), maneuverLoss2.getSpeedWithBearingBefore().getBearing().getDegrees(), 0.000001);
+        }
     }
 }
