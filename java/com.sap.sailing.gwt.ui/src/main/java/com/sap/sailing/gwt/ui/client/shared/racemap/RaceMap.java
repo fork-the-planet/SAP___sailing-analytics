@@ -2026,11 +2026,16 @@ public class RaceMap extends AbstractCompositeComponent<RaceMapSettings> impleme
                     boatCanvas.removeFromMap();
                     boatOverlaysByCompetitorIdsAsStrings.remove(unusedBoatCanvasCompetitorDTO);
                 }
-                for (String unusedTailCompetitorDTO : competitorIdsAsStringOfUnusedTails) {
-                    fixesAndTails.removeTail(unusedTailCompetitorDTO);
+                for (String unusedTailCompetitorIdAsString : competitorIdsAsStringOfUnusedTails) {
+                    removeTail(unusedTailCompetitorIdAsString);
                 }
             }
         }
+    }
+    
+    private void removeTail(String competitorIdAsString) {
+        fixesAndTails.removeTail(competitorIdAsString);
+        lastAppliedTailDisplayModes.remove(competitorIdAsString);
     }
 
     /**
@@ -3209,8 +3214,7 @@ public class RaceMap extends AbstractCompositeComponent<RaceMapSettings> impleme
                     if (!next.getKey().equals(competitor.getIdAsString())) {
                         CanvasOverlayV3 boatOverlay = next.getValue();
                         boatOverlay.removeFromMap();
-                        fixesAndTails.removeTail(next.getKey());
-                        lastAppliedTailDisplayModes.remove(next.getKey());
+                        removeTail(next.getKey());
                         i.remove(); // only this way a ConcurrentModificationException while looping can be avoided
                     }
                 }
@@ -3246,8 +3250,7 @@ public class RaceMap extends AbstractCompositeComponent<RaceMapSettings> impleme
                     if (removedBoatOverlay != null) {
                         removedBoatOverlay.removeFromMap();
                     }
-                    fixesAndTails.removeTail(competitor.getIdAsString());
-                    lastAppliedTailDisplayModes.remove(competitor.getIdAsString());
+                    removeTail(competitor.getIdAsString());
                     showCompetitorInfoOnMap(timer.getTime(), -1, competitorSelection.getSelectedFilteredCompetitors());
                 }
             } else {
