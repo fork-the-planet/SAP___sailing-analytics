@@ -54,7 +54,9 @@ public class UserPreferencesPresenter<C extends ClientFactoryWithDispatch & Erro
                 final boolean isNotify = result.getFavoriteCompetitors().isNotifyAboutResults();
                 final Collection<SimpleCompetitorWithIdDTO> selection = result.getFavoriteCompetitors().getSelectedCompetitors();
                 competitorPresenter.initResults(isNotify, selection);
-                initFavoriteBoatClasses(result.getFavoriteBoatClasses());
+                final FavoriteBoatClassesDTO favoriteBoatClasses = result.getFavoriteBoatClasses();
+                boatClassSelectionPresenter.initNotifications(favoriteBoatClasses.isNotifyAboutUpcomingRaces(),
+                        favoriteBoatClasses.isNotifyAboutResults(), favoriteBoatClasses.getSelectedBoatClasses());
             }
         };
         clientFactory.getDispatch().execute(new GetFavoritesAction(), callback);
@@ -65,12 +67,6 @@ public class UserPreferencesPresenter<C extends ClientFactoryWithDispatch & Erro
         return boatClassSelectionPresenter;
     }
 
-    private void initFavoriteBoatClasses(FavoriteBoatClassesDTO favoriteBoatClasses) {
-        boatClassSelectionPresenter.initNotifications(favoriteBoatClasses.isNotifyAboutUpcomingRaces(),
-                favoriteBoatClasses.isNotifyAboutResults());
-        boatClassSelectionPresenter.initSelectedItems(favoriteBoatClasses.getSelectedBoatClasses());
-    }
-
     private class BoatClassSelectionPresenterImpl
             extends AbstractSuggestedBoatClassMultiSelectionPresenter<BoatClassSelectionPresenter.Display>
             implements BoatClassSelectionPresenter {
@@ -78,10 +74,9 @@ public class UserPreferencesPresenter<C extends ClientFactoryWithDispatch & Erro
         private AsyncCallback<VoidResult> selectionCallback;
 
         @Override
-        public void initNotifications(boolean notifyAboutUpcomingRaces, boolean notifyAboutResults) {
+        public void initNotifications(boolean notifyAboutUpcomingRaces, boolean notifyAboutResults, Collection<BoatClassDTO> selection) {
             this.displays.forEach(display -> {
-                display.setNotifyAboutUpcomingRaces(notifyAboutUpcomingRaces);
-                display.setNotifyAboutResults(notifyAboutResults);
+                display.initResults(notifyAboutUpcomingRaces, notifyAboutResults, selection);
             });
         }
 

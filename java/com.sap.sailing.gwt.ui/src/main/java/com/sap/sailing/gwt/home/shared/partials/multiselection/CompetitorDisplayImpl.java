@@ -66,19 +66,18 @@ public class CompetitorDisplayImpl implements IsWidget, CompetitorSelectionPrese
         final AsyncCallback<VoidResult> selectionPersistenceCallback = new AsyncCallback<VoidResult>() {
             @Override
             public void onFailure(Throwable caught) {
-                Notification.notify(StringMessages.INSTANCE.failedToAddNewFavoriteCompetitor(), NotificationType.ERROR);
+                Notification.notify(StringMessages.INSTANCE.failedToModifyFavoriteCompetitors(), NotificationType.ERROR);
             }
 
             @Override
             public void onSuccess(VoidResult result) {
-                Notification.notify(StringMessages.INSTANCE.newFavoriteCompetitorAdded(), NotificationType.SUCCESS);
+                Notification.notify(StringMessages.INSTANCE.favoriteCompetitorsModifiedSuccessfully(), NotificationType.SUCCESS);
             }
         };
         presenter.setSelectionPersistenceCallback(selectionPersistenceCallback);
         return new SuggestedMultiSelection<>(presenter, widgetFactory);
     }
 
-    // TODO add different messages to toast response here
     private CheckBoxTile composeTile() {
         final BiConsumer<Boolean, AsyncCallback<VoidResult>> onToggle = (isNowTrue, callback) -> {
             presenter.persistResults(isNowTrue, wrapCallbackWithToastResponse(isNowTrue, callback),

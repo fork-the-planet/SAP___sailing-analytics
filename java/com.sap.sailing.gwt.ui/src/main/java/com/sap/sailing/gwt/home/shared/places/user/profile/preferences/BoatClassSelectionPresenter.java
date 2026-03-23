@@ -14,7 +14,7 @@ public interface BoatClassSelectionPresenter
 
     void setNotifyAboutResults(boolean notifyAboutResults, AsyncCallback<VoidResult> callback);
 
-    void initNotifications(boolean notifyAboutUpcomingRaces, boolean notifyAboutResults);
+    void initNotifications(boolean notifyAboutUpcomingRaces, boolean notifyAboutResults, Collection<BoatClassDTO> selection);
 
     void persistResults(boolean notifyAboutUpcomingRaces, boolean notifyAboutResults,
             AsyncCallback<VoidResult> callback, Collection<BoatClassDTO> latestSelectedItems);
@@ -22,10 +22,7 @@ public interface BoatClassSelectionPresenter
     void setSelectionPersistenceCallback(AsyncCallback<VoidResult> selectionCallback);
 
     interface Display extends SuggestedMultiSelectionPresenter.Display<BoatClassDTO> {
-
-        void setNotifyAboutUpcomingRaces(boolean notifyAboutUpcomingRaces);
-
-        void setNotifyAboutResults(boolean notifyAboutResults);
+        void initResults(boolean notifyAboutUpcomingRaces, boolean notifyAboutResults, Collection<BoatClassDTO> selection);
 
         boolean getNotifyAboutUpcomingRaces();
 

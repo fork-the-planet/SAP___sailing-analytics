@@ -23,8 +23,8 @@
         <div class="{res.mediaCss.column} {res.mediaCss.small12} {res.mediaCss.medium6} {res.mainCss.spacermargintopmediumsmall}">
             <lb:LabeledBox ui:field="favoriteCompetitorsSelctionUi"/>
         </div>
-        <!-- <div class="{res.mediaCss.column} {res.mediaCss.small12} {res.mediaCss.medium6} {res.mainCss.spacermargintopmediumsmall}">
+        <div class="{res.mediaCss.column} {res.mediaCss.small12} {res.mediaCss.medium6} {res.mainCss.spacermargintopmediumsmall}">
             <lb:LabeledBox ui:field="favoriteBoatClassesSelctionUi"/>
-        </div> -->
+        </div>
     </g:HTMLPanel>
 </ui:UiBinder> 

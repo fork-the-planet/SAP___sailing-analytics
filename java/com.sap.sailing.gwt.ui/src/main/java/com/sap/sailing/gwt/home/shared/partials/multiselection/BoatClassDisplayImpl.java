@@ -61,7 +61,7 @@ public class BoatClassDisplayImpl implements IsWidget, BoatClassSelectionPresent
     }
 
     private SuggestedMultiSelection<BoatClassDTO> composeFilter() {
-        final SuggestedMultiSelection.WidgetFactory<BoatClassDTO> widgetProvider = new SuggestedMultiSelection.WidgetFactory<BoatClassDTO>() {
+        final SuggestedMultiSelection.WidgetFactory<BoatClassDTO> widgetFactory = new SuggestedMultiSelection.WidgetFactory<BoatClassDTO>() {
             @Override
             public IsWidget generateItemDescriptionWidget(BoatClassDTO item) {
                 return new SuggestedMultiSelectionBoatClassItemDescription(item);
@@ -74,11 +74,19 @@ public class BoatClassDisplayImpl implements IsWidget, BoatClassSelectionPresent
                 return new SuggestedMultiSelection.SelectableSuggestion<BoatClassDTO>(presenter, selectionCallback, text);
             }
         };
-        presenter.setSelectionPersistenceCallback(wrapCallbackWithToastResponse(upcomingRacesUi.getValue(),
-                null, StringMessages.INSTANCE.failedToSetStatusOfUpdatesOnNewResultsForYourFavoredBoatClasses(),
-                StringMessages.INSTANCE.youWillNowReceiveUpdatesOnNewResultsForYourFavoredBoatClasses(),
-                StringMessages.INSTANCE.youWillNotReceiveNotificationsForFavoriteBoatClassNewResultsAnymore()));
-        return new SuggestedMultiSelection<>(presenter, widgetProvider);
+        final AsyncCallback<VoidResult> callbackWrappedWithToastNotification = new AsyncCallback<VoidResult>() {
+            @Override
+            public void onFailure(Throwable caught) {
+                Notification.notify(StringMessages.INSTANCE.failedToModifyFavoredBoatClasses(), NotificationType.ERROR);
+            }
+
+            @Override
+            public void onSuccess(VoidResult result) {
+                Notification.notify(StringMessages.INSTANCE.succesfullyModifiedFavoredBoatClasses(), NotificationType.SUCCESS);
+            }
+        };
+        presenter.setSelectionPersistenceCallback(callbackWrappedWithToastNotification);
+        return new SuggestedMultiSelection<>(presenter, widgetFactory);
     }
 
     private CheckBoxTile composeUpcomingRacesTile() {
@@ -133,12 +141,9 @@ public class BoatClassDisplayImpl implements IsWidget, BoatClassSelectionPresent
     }
 
     @Override
-    public void setNotifyAboutUpcomingRaces(boolean notifyAboutUpcomingRaces) {
+    public void initResults(boolean notifyAboutUpcomingRaces, boolean notifyAboutResults, Collection<BoatClassDTO> selection) {
         upcomingRacesUi.setValue(notifyAboutUpcomingRaces);
-    }
-
-    @Override
-    public void setNotifyAboutResults(boolean notifyAboutResults) {
         resultsUi.setValue(notifyAboutResults);
+        filterUi.setSelectedItems(selection);
     }
 }

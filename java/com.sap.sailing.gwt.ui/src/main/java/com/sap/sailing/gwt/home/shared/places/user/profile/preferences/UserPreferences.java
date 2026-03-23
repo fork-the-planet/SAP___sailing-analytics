@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import com.sap.sailing.gwt.common.client.SharedResources;
 import com.sap.sailing.gwt.home.shared.partials.labeledbox.LabeledBox;
+import com.sap.sailing.gwt.home.shared.partials.multiselection.BoatClassDisplayImpl;
 import com.sap.sailing.gwt.home.shared.partials.multiselection.CompetitorDisplayImpl;
 import com.sap.sailing.gwt.home.shared.partials.multiselection.MiscellaneousDisplayImpl;
 import com.sap.sailing.gwt.ui.client.FlagImageResolver;
@@ -33,8 +34,8 @@ public class UserPreferences extends Composite implements UserPreferencesView {
     SharedResources res;
     @UiField(provided = true)
     LabeledBox favoriteCompetitorsSelctionUi;
-//    @UiField(provided = true)
-//    LabeledBox favoriteBoatClassesSelctionUi;
+    @UiField(provided = true)
+    LabeledBox favoriteBoatClassesSelctionUi;
     @UiField(provided = true)
     LabeledBox miscUi;
     @UiField
@@ -45,8 +46,8 @@ public class UserPreferences extends Composite implements UserPreferencesView {
         this.presenter = presenter;
         favoriteCompetitorsSelctionUi = new CompetitorDisplayImpl(presenter.getFavoriteCompetitorsDataProvider(),
                 flagImageResolver).selectionUi;
-//        favoriteBoatClassesSelctionUi = new BoatClassDisplayImpl(
-//                presenter.getFavoriteBoatClassesDataProvider()).selectionUi;
+        favoriteBoatClassesSelctionUi = new BoatClassDisplayImpl(
+                presenter.getFavoriteBoatClassesDataProvider()).selectionUi;
         miscUi = (new MiscellaneousDisplayImpl(presenter)).selectionUi;
         initWidget(uiBinder.createAndBindUi(this));
         // TODO hide notificationsTextUi if the user's mail address is already verified
