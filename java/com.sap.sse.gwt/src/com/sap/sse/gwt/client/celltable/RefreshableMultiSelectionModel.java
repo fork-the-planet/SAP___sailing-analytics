@@ -3,12 +3,12 @@ package com.sap.sse.gwt.client.celltable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.view.client.MultiSelectionModel;
+import com.google.gwt.view.client.MultiSelectionModelWithSelectedIterable;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionChangeEvent;
+import com.sap.sse.common.Util;
 
 /**
  * This {@link RefreshableMultiSelectionModel} implements the {@link RefreshableSelectionModel} interface. So it
@@ -27,7 +27,7 @@ import com.google.gwt.view.client.SelectionChangeEvent;
  * @param <T>
  *            the type of entries
  */
-public class RefreshableMultiSelectionModel<T> extends MultiSelectionModel<T>
+public class RefreshableMultiSelectionModel<T> extends MultiSelectionModelWithSelectedIterable<T>
         implements RefreshableSelectionModel<T> {
     final EntityIdentityComparator<T> comp;
     private boolean dontCheckSelectionState = false;
@@ -72,7 +72,7 @@ public class RefreshableMultiSelectionModel<T> extends MultiSelectionModel<T>
      * @return <code>true</code> if the list of visible items does not contain every item of the current selected item set.
      */
     public boolean itemIsSelectedButNotVisible(List<T> visibleItemList) {
-        for (T item : getSelectedSet()) {
+        for (T item : getSelectedElements()) {
             if (!visibleItemList.contains(item)) {
                 return true;
             }
@@ -93,8 +93,7 @@ public class RefreshableMultiSelectionModel<T> extends MultiSelectionModel<T>
             super.setSelected(item, selected);
         } else {
             T wasSelectedBefore = null;
-            final Set<T> selectedSet = getSelectedSet();
-            for (T it : selectedSet) {
+            for (T it : getSelectedElements()) {
                 if (getEntityIdentityComparator().representSameEntity(it, item)) {
                     wasSelectedBefore = it;
                     break;
@@ -131,12 +130,12 @@ public class RefreshableMultiSelectionModel<T> extends MultiSelectionModel<T>
         if (!dontCheckSelectionState) { // avoid endless recursions
             dontCheckSelectionState = true;
             try {
-                final Set<T> selectedSet = getSelectedSet(); // gets the selected set as a non-live copy, so later
-                                                             // changes to the selection won't change this set anymore
-                final boolean isEmpty = selectedSet.isEmpty();
+                final Iterable<T> selectedElements = getSelectedElements(); // gets the selected set as a non-live copy, so later
+                                                                       // changes to the selection won't change this set anymore
+                final boolean isEmpty = Util.isEmpty(selectedElements);
                 if (!isEmpty) {
                     final Map<Object, T> selectedElementsByKey = new HashMap<>();
-                    for (final T selectedElement : selectedSet) {
+                    for (final T selectedElement : selectedElements) {
                         selectedElementsByKey.put(getKey(selectedElement), selectedElement);
                     }
                     for (T it : newObjects) {
