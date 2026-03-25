@@ -581,10 +581,6 @@ public abstract class LeaderboardPanel<LS extends LeaderboardSettings> extends A
         this.availableDetailTypes = availableDetailTypes;
     }
     
-    public EntityIdentityComparator<LeaderboardRowDTO> getEntityIdentityComparator() {
-        return leaderboardSelectionModel.getEntityIdentityComparator();
-    }
-
     protected abstract void openSettingsDialog();
 
     protected void initialize(LS settings) {

@@ -89,13 +89,13 @@ public class RefreshableMultiSelectionModel<T> extends MultiSelectionModel<T>
      */
     @Override
     public void setSelected(T item, boolean selected) {
-        if (comp == null || dontCheckSelectionState || item == null || getSelectedSet().isEmpty()) {
+        if (getEntityIdentityComparator() == null || dontCheckSelectionState || item == null || getSelectedSet().isEmpty()) {
             super.setSelected(item, selected);
         } else {
             T wasSelectedBefore = null;
-            Set<T> selectedSet = getSelectedSet();
+            final Set<T> selectedSet = getSelectedSet();
             for (T it : selectedSet) {
-                if (comp.representSameEntity(it, item)) {
+                if (getEntityIdentityComparator().representSameEntity(it, item)) {
                     wasSelectedBefore = it;
                     break;
                 }
@@ -135,8 +135,8 @@ public class RefreshableMultiSelectionModel<T> extends MultiSelectionModel<T>
                                                              // changes to the selection won't change this set anymore
                 final boolean isEmpty = selectedSet.isEmpty();
                 if (!isEmpty) {
-                    clear();
-                    if (comp == null) {
+                    clear(); // FIXME bug6214: don't clear but use fine-grained setSelected(...) calls to adjust with minimal change
+                    if (getEntityIdentityComparator() == null) {
                         for (T it : newObjects) {
                             final boolean selected = selectedSet.contains(it);
                             if (selected) {
@@ -146,10 +146,10 @@ public class RefreshableMultiSelectionModel<T> extends MultiSelectionModel<T>
                     } else {
                         final Map<EntityIdentityWrapper<T>, T> wrappedNewObjects = new HashMap<>();
                         for (T it : newObjects) {
-                            wrappedNewObjects.put(new EntityIdentityWrapper<T>(it, comp), it);
+                            wrappedNewObjects.put(new EntityIdentityWrapper<T>(it, getEntityIdentityComparator()), it);
                         }
                         for (final T selected : selectedSet) {
-                            T newSelectedElement = wrappedNewObjects.remove(new EntityIdentityWrapper<T>(selected, comp));
+                            T newSelectedElement = wrappedNewObjects.remove(new EntityIdentityWrapper<T>(selected, getEntityIdentityComparator()));
                             if (newSelectedElement != null) {
                                 setSelected(newSelectedElement, true);
                             }

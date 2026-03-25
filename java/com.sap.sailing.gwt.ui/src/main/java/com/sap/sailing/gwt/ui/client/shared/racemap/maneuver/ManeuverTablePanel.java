@@ -31,7 +31,6 @@ import com.google.gwt.view.client.SelectionChangeEvent.Handler;
 import com.google.gwt.view.client.SingleSelectionModel;
 import com.sap.sailing.domain.common.RegattaAndRaceIdentifier;
 import com.sap.sailing.domain.common.dto.CompetitorDTO;
-import com.sap.sailing.domain.common.dto.LeaderboardRowDTO;
 import com.sap.sailing.domain.common.security.SecuredDomainType.TrackedRaceActions;
 import com.sap.sailing.gwt.ui.actions.GetManeuversForCompetitorsAction;
 import com.sap.sailing.gwt.ui.client.CompetitorSelectionChangeListener;
@@ -53,7 +52,6 @@ import com.sap.sse.common.impl.InvertibleComparatorAdapter;
 import com.sap.sse.gwt.client.ErrorReporter;
 import com.sap.sse.gwt.client.async.AsyncActionsExecutor;
 import com.sap.sse.gwt.client.celltable.AbstractSortableColumnWithMinMax;
-import com.sap.sse.gwt.client.celltable.EntityIdentityComparator;
 import com.sap.sse.gwt.client.celltable.SortableColumn;
 import com.sap.sse.gwt.client.celltable.SortedCellTableWithStylableHeaders;
 import com.sap.sse.gwt.client.player.TimeListener;
@@ -100,8 +98,7 @@ public class ManeuverTablePanel extends AbstractCompositeComponent<ManeuverTable
             final RaceCompetitorSelectionProvider competitorSelectionModel, final ErrorReporter errorReporter,
             final Timer timer, final ManeuverTableSettings initialSettings,
             final TimeRangeWithZoomModel timeRangeWithZoomProvider, final LeaderBoardStyle style,
-            final UserService userService, final RaceWithCompetitorsAndBoatsDTO raceDTO,
-            final EntityIdentityComparator<LeaderboardRowDTO> competitorEntityIdentityComparator) {
+            final UserService userService, final RaceWithCompetitorsAndBoatsDTO raceDTO) {
         super(parent, context);
         final UserStatusEventHandler userStatusChangeHandler = new UserStatusEventHandler() {
             @Override
