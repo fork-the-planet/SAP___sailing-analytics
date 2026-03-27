@@ -2887,6 +2887,10 @@ public class SailingServiceImpl extends ResultCachingProxiedRemoteServiceServlet
                         // result yet:
                         Iterable<Maneuver> maneuvers = trackedRace.getManeuvers(competitor, from, to, /* waitForLatest */ false);
                         if (maneuvers == null) {
+                            // FIXME bug6223: trackedRace.getManeuvers(...) may use a SmartFutureCache to produce results;
+                            // that, in turn, may have to wait for the background thread pool executor. This can block Jetty HTTP
+                            // request threads and eventually deplete Jetty's thread pool. We may wait for a response with a short
+                            // timeout, but then have to return quickly.
                             maneuvers = trackedRace.getManeuvers(competitor, from, to, /* waitForLatest */ true);
                         }
                         return createManeuverDTOsForCompetitor(maneuvers, trackedRace, competitor);
