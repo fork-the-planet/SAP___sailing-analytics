@@ -163,8 +163,9 @@ public class WindFinderTrackerFactoryImpl implements WindFinderTrackerFactory {
         if (!lookupInCache || (result = reviewedSpotsCollectionsByIdCache.get().get(spotsCollectionId)) == null) {
             final ReviewedSpotsCollectionImpl finalResult = new ReviewedSpotsCollectionImpl(spotsCollectionId);
             result = finalResult;
-            // FIXME bug6223: the following is problematic: reviewedSpotsCollectionsByIdCache is a Future scheduled with the executor
-            // used here to schedule another task that is then waiting for the Future.
+            // We assume that reviewedSpotsCollectionsByIdCache has been scheduled with the executor
+            // when the constructor ran, so it will be handled before the following task. Therefore,
+            // no deadlock can occur when the following task is added to the same executor
             executor.schedule(()->reviewedSpotsCollectionsByIdCache.get().put(spotsCollectionId, finalResult), /* delay */ 0, TimeUnit.MILLISECONDS);
         }
         return result;

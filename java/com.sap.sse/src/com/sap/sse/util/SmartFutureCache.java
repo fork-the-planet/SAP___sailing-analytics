@@ -666,11 +666,23 @@ public class SmartFutureCache<K, V, U extends UpdateInterval<U>> {
     }
     
     /**
-     * Fetches a value for <code>key</code> from the cache. If no {@link #triggerUpdate(Object, UpdateInterval)} for the <code>key</code>
-     * has ever happened, <code>null</code> will be returned. Otherwise, depending on <code>waitForLatest</code> the result is taken
-     * from the cache straight away (<code>waitForLatest==false</code>) or, if a re-calculation for the <code>key</code> is still
-     * ongoing, the result of that ongoing re-calculation is returned. When {@link #remove(Object)} has been called for the {@code key} and
-     * no update has finished computing since then, this method will also return {@code null} in case {@code waitForLatest} is {@code false}.
+     * Fetches a value for <code>key</code> from the cache. If no {@link #triggerUpdate(Object, UpdateInterval)} for the
+     * <code>key</code> has ever happened, <code>null</code> will be returned. Otherwise, depending on
+     * <code>waitForLatest</code> the result is taken from the cache straight away (<code>waitForLatest==false</code>)
+     * or, if a re-calculation for the <code>key</code> is still ongoing, the result of that ongoing re-calculation is
+     * returned. When {@link #remove(Object)} has been called for the {@code key} and no update has finished computing
+     * since then, this method will also return {@code null} in case {@code waitForLatest} is {@code false}.
+     * <p>
+     * 
+     * @param waitForLatest
+     *            if {@code true}, the call may block, waiting for a scheduled or ongoing task to complete. Note: the
+     *            tasks updating this cache are scheduled with the
+     *            {@link ThreadPoolUtil#getDefaultBackgroundTaskThreadPoolExecutor() default background thread pool}
+     *            which may contain many tasks during certain phases of the life cycle of the process; e.g., during
+     *            start-up of the ARCHIVE server, several hundred thousand tasks may be enqueued with that background
+     *            executor, so that it may take minutes or even hours until a task is actually picked up and run.
+     *            Therefore, no foreground / HTTP request thread should ever use {@code true} for this parameter. It
+     *            may otherwise block all of the HTTP request threads. See also bug 6223.
      */
     public V get(final K key, boolean waitForLatest) {
         final V value;
