@@ -181,7 +181,7 @@ public class LeaderboardConfigPanel extends AbstractLeaderboardConfigPanel
             ListDataProvider<StrippedLeaderboardDTO> listDataProvider) {
         ListHandler<StrippedLeaderboardDTO> leaderboardColumnListHandler = new ListHandler<StrippedLeaderboardDTO>(
                 filteredLeaderboardList.getList());
-        SelectionCheckboxColumn<StrippedLeaderboardDTO> selectionCheckboxColumn = createSortableSelectionCheckboxColumn(
+        SelectionCheckboxColumn<StrippedLeaderboardDTO> selectionCheckboxColumn = createSelectionCheckboxColumn(
                 leaderboardTable, tableResources, leaderboardColumnListHandler, listDataProvider);
         AnchorCell anchorCell = new AnchorCell();
         Column<StrippedLeaderboardDTO, SafeHtml> linkColumn = new Column<StrippedLeaderboardDTO, SafeHtml>(

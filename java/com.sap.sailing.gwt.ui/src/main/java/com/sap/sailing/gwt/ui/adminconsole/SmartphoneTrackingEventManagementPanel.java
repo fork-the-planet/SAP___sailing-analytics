@@ -148,7 +148,7 @@ public class SmartphoneTrackingEventManagementPanel extends AbstractLeaderboardC
             ListDataProvider<StrippedLeaderboardDTO> listDataProvider) {
         ListHandler<StrippedLeaderboardDTO> leaderboardColumnListHandler = new ListHandler<StrippedLeaderboardDTO>(
                 filteredLeaderboardList.getList());
-        SelectionCheckboxColumn<StrippedLeaderboardDTO> selectionCheckboxColumn = createSortableSelectionCheckboxColumn(
+        SelectionCheckboxColumn<StrippedLeaderboardDTO> selectionCheckboxColumn = createSelectionCheckboxColumn(
                 leaderboardTable, tableResources, leaderboardColumnListHandler, listDataProvider);
         TextColumn<StrippedLeaderboardDTO> leaderboardNameColumn = new TextColumn<StrippedLeaderboardDTO>() {
             @Override

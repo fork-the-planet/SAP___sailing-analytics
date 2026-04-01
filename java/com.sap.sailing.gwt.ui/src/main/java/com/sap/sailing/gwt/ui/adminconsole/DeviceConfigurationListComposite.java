@@ -43,7 +43,7 @@ import com.google.gwt.user.cellview.client.Header;
 public class DeviceConfigurationListComposite extends Composite  {
     protected static AdminConsoleTableResources tableResource = GWT.create(AdminConsoleTableResources.class);
     
-    private  RefreshableMultiSelectionModel<DeviceConfigurationWithSecurityDTO> refreshableConfigurationSelectionModel;
+    private RefreshableMultiSelectionModel<DeviceConfigurationWithSecurityDTO> refreshableConfigurationSelectionModel;
     private final CellTable<DeviceConfigurationWithSecurityDTO> configurationTable;
     protected ListDataProvider<DeviceConfigurationWithSecurityDTO> configurationsDataProvider;
     

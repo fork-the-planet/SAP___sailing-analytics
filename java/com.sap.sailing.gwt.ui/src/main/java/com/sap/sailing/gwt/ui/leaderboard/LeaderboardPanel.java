@@ -39,7 +39,6 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.text.shared.AbstractSafeHtmlRenderer;
 import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.cellview.client.Header;
 import com.google.gwt.user.cellview.client.SafeHtmlHeader;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
@@ -57,7 +56,6 @@ import com.google.gwt.view.client.CellPreviewEvent;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SelectionChangeEvent.Handler;
-import com.sap.sse.gwt.client.celltable.RefreshableMultiSelectionModel;
 import com.sap.sailing.domain.common.DetailType;
 import com.sap.sailing.domain.common.LeaderboardNameConstants;
 import com.sap.sailing.domain.common.MaxPointsReason;
@@ -110,6 +108,7 @@ import com.sap.sse.gwt.client.async.AsyncActionsExecutor;
 import com.sap.sse.gwt.client.celltable.AbstractSortableColumnWithMinMax;
 import com.sap.sse.gwt.client.celltable.EntityIdentityComparator;
 import com.sap.sse.gwt.client.celltable.FlushableSortedCellTableWithStylableHeaders;
+import com.sap.sse.gwt.client.celltable.RefreshableMultiSelectionModel;
 import com.sap.sse.gwt.client.celltable.SelectionCheckboxColumn;
 import com.sap.sse.gwt.client.celltable.SortedCellTable;
 import com.sap.sse.gwt.client.controls.busyindicator.BusyIndicator;
@@ -245,7 +244,6 @@ public abstract class LeaderboardPanel<LS extends LeaderboardSettings> extends A
     protected Iterable<DetailType> availableDetailTypes;
 
     private final SelectionCheckboxColumn<LeaderboardRowDTO> selectionCheckboxColumn;
-    private final Header<Boolean> selectionCheckboxColumnHeader;
 
     /**
      * Passed to the {@link ManeuverCountRaceColumn}. Modifications to this list will modify the column's children list
@@ -520,7 +518,6 @@ public abstract class LeaderboardPanel<LS extends LeaderboardSettings> extends A
         });
         leaderboardTable.ensureDebugId("LeaderboardCellTable");
         selectionCheckboxColumn = new LeaderboardSelectionCheckboxColumn(competitorSelectionProvider);
-        selectionCheckboxColumnHeader = selectionCheckboxColumn.createHeader();
         leaderboardTable.setWidth("100%");
         // Use the SelectionCheckboxColumn's RefreshableMultiSelectionModel as THE single selection model
         leaderboardSelectionModel = selectionCheckboxColumn.getSelectionModel();
@@ -2492,8 +2489,7 @@ public abstract class LeaderboardPanel<LS extends LeaderboardSettings> extends A
                                 // This causes in consequence potentiallyChangedSettings to not be equal to currentSettings anymore.
                                 // We then apply the new settings to make all new race columns visible.
                                 // TODO check if there is an easier way to get to know if we need to reapply the settings.
-                                LS potentiallyChangedSettings = overrideDefaultsForNamesOfRaceColumns(currentSettings,
-                                        result);
+                                LS potentiallyChangedSettings = overrideDefaultsForNamesOfRaceColumns(currentSettings, result);
                                 // reapply, when this is the first time we received the race columns or if columns have
                                 // changed
                                 if (wasEmptyRaceColumnSelection
@@ -3149,7 +3145,7 @@ public abstract class LeaderboardPanel<LS extends LeaderboardSettings> extends A
 
     private void insertSelectionCheckboxColumn(int beforeIndex) {
         removeColumnStyles(beforeIndex);
-        getLeaderboardTable().insertColumn(beforeIndex, selectionCheckboxColumn, selectionCheckboxColumnHeader,
+        getLeaderboardTable().insertColumn(beforeIndex, selectionCheckboxColumn, selectionCheckboxColumn.createHeader(),
                 /* comparator */ null, selectionCheckboxColumn.getPreferredSortingOrder().isAscending());
         addColumnStyles(beforeIndex);
     }

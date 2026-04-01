@@ -391,7 +391,7 @@ public abstract class AbstractLeaderboardConfigPanel extends FormPanel
 
     protected abstract void addColumnsToRacesTable(CellTable<RaceColumnDTOAndFleetDTOWithNameBasedEquality> racesTable);
 
-    protected SelectionCheckboxColumn<StrippedLeaderboardDTO> createSortableSelectionCheckboxColumn(
+    protected SelectionCheckboxColumn<StrippedLeaderboardDTO> createSelectionCheckboxColumn(
             final FlushableCellTable<StrippedLeaderboardDTO> leaderboardTable,
             AdminConsoleTableResources tableResources,
             ListHandler<StrippedLeaderboardDTO> leaderboardColumnListHandler,
