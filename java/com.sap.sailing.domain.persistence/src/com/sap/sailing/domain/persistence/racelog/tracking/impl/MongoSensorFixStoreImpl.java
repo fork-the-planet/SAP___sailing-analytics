@@ -192,7 +192,6 @@ public class MongoSensorFixStoreImpl extends MongoFixHandler implements MongoSen
             }
         }
         progressConsumer.accept(1d);
-        
         return fixLoaded;
     }
 
