@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -39,7 +38,6 @@ import com.sap.sailing.domain.base.BoatClass;
 import com.sap.sailing.domain.base.Competitor;
 import com.sap.sailing.domain.base.CompetitorWithBoat;
 import com.sap.sailing.domain.base.DomainFactory;
-import com.sap.sailing.domain.base.Event;
 import com.sap.sailing.domain.base.Fleet;
 import com.sap.sailing.domain.base.RaceColumn;
 import com.sap.sailing.domain.base.Regatta;
@@ -54,7 +52,6 @@ import com.sap.sailing.domain.common.CompetitorRegistrationType;
 import com.sap.sailing.domain.common.DeviceIdentifier;
 import com.sap.sailing.domain.common.racelog.tracking.NotDenotedForRaceLogTrackingException;
 import com.sap.sailing.domain.common.tracking.impl.GPSFixMovingImpl;
-import com.sap.sailing.domain.leaderboard.EventResolver;
 import com.sap.sailing.domain.leaderboard.RegattaLeaderboard;
 import com.sap.sailing.domain.leaderboard.impl.HighPoint;
 import com.sap.sailing.domain.persistence.MongoObjectFactory;
@@ -97,18 +94,6 @@ public class CreateAndTrackWithRaceLogTest extends RaceLogTrackingTestHelper {
     private RaceLogTrackingAdapter adapter;
     private Regatta regatta;
     private SensorFixStore sensorFixStore;
-    private final EventResolver dummyEventResolver = new EventResolver() {
-        @Override
-        public Event getEvent(Serializable id) {
-            return null;
-        }
-
-        @Override
-        public Iterable<Event> getAllEvents() {
-            return Collections.emptySet();
-        }
-    };
-
     private long time = 0;
 
     @BeforeEach
@@ -239,7 +224,7 @@ public class CreateAndTrackWithRaceLogTest extends RaceLogTrackingTestHelper {
         TrackedRace race = trackAndGetRace(column);
         assertNotNull(race);
         RaceLogFixTrackerManager raceLogFixTrackerManager = new RaceLogFixTrackerManager((DynamicTrackedRace) race,
-                sensorFixStore, null, /* removeOutliersFromCompetitorTracks */ false, dummyEventResolver);
+                sensorFixStore, null, /* removeOutliersFromCompetitorTracks */ false);
         raceLogFixTrackerManager.waitForTracker();
         race.waitForLoadingToFinish();
         addFixes1(race, comp1, dev1);
@@ -315,7 +300,7 @@ public class CreateAndTrackWithRaceLogTest extends RaceLogTrackingTestHelper {
         TrackedRace race = trackAndGetRace(column);
         assertNotNull(race);
         RaceLogFixTrackerManager raceLogFixTrackerManager = new RaceLogFixTrackerManager((DynamicTrackedRace) race,
-                sensorFixStore, null, /* removeOutliersFromCompetitorTracks */ false, dummyEventResolver);
+                sensorFixStore, null, /* removeOutliersFromCompetitorTracks */ false);
         raceLogFixTrackerManager.waitForTracker();
         race.waitForLoadingToFinish();
         addFixes1(race, comp1, dev1);

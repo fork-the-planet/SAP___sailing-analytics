@@ -52,7 +52,6 @@ import com.sap.sailing.domain.base.BoatClass;
 import com.sap.sailing.domain.base.Competitor;
 import com.sap.sailing.domain.base.Course;
 import com.sap.sailing.domain.base.DomainFactory;
-import com.sap.sailing.domain.base.Event;
 import com.sap.sailing.domain.base.Mark;
 import com.sap.sailing.domain.base.RaceDefinition;
 import com.sap.sailing.domain.base.Sideline;
@@ -70,7 +69,6 @@ import com.sap.sailing.domain.common.tracking.GPSFixMoving;
 import com.sap.sailing.domain.common.tracking.SensorFix;
 import com.sap.sailing.domain.common.tracking.impl.DoubleVectorFixImpl;
 import com.sap.sailing.domain.common.tracking.impl.GPSFixMovingImpl;
-import com.sap.sailing.domain.leaderboard.EventResolver;
 import com.sap.sailing.domain.persistence.PersistenceFactory;
 import com.sap.sailing.domain.persistence.impl.CollectionNames;
 import com.sap.sailing.domain.persistence.racelog.tracking.impl.MongoSensorFixStoreImpl;
@@ -446,16 +444,6 @@ public class SensorFixStoreAndLoadTest {
                     return (SensorFixMapper) testDataFixMapper;
                 }
                 throw new IllegalArgumentException("Unknown event type");
-            }
-        }, new EventResolver() {
-            @Override
-            public Event getEvent(Serializable id) {
-                return null;
-            }
-
-            @Override
-            public Iterable<Event> getAllEvents() {
-                return Collections.emptySet();
             }
         }, /* removeOutliersFromCompetitorTracks */ false);
     }

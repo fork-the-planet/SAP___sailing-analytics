@@ -2,7 +2,6 @@ package com.sap.sailing.domain.racelogtracking.test.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +26,6 @@ import com.sap.sailing.domain.base.BoatClass;
 import com.sap.sailing.domain.base.Competitor;
 import com.sap.sailing.domain.base.Course;
 import com.sap.sailing.domain.base.DomainFactory;
-import com.sap.sailing.domain.base.Event;
 import com.sap.sailing.domain.base.Mark;
 import com.sap.sailing.domain.base.RaceDefinition;
 import com.sap.sailing.domain.base.impl.CourseImpl;
@@ -36,7 +34,6 @@ import com.sap.sailing.domain.base.impl.WaypointImpl;
 import com.sap.sailing.domain.common.DeviceIdentifier;
 import com.sap.sailing.domain.common.tracking.GPSFix;
 import com.sap.sailing.domain.common.tracking.GPSFixMoving;
-import com.sap.sailing.domain.leaderboard.EventResolver;
 import com.sap.sailing.domain.racelogtracking.impl.SmartphoneImeiIdentifierImpl;
 import com.sap.sailing.domain.racelogtracking.impl.fixtracker.FixLoaderAndTracker;
 import com.sap.sailing.domain.racelogtracking.test.AbstractGPSFixStoreTest;
@@ -65,18 +62,6 @@ public class TrackedRaceLoadsFixesTest extends AbstractGPSFixStoreTest {
 
     private RaceDefinition raceDefinition;
     
-    private final EventResolver dummyEventResolver = new EventResolver() {
-        @Override
-        public Event getEvent(Serializable id) {
-            return null;
-        }
-
-        @Override
-        public Iterable<Event> getAllEvents() {
-            return Collections.emptySet();
-        }
-    };
-    
     @BeforeEach
     public void setUp() throws UnknownHostException, MongoException {
         Map<Competitor, Boat> competitorsAndBoats = new HashMap<>();
@@ -101,7 +86,7 @@ public class TrackedRaceLoadsFixesTest extends AbstractGPSFixStoreTest {
         final DynamicTrackedRaceImpl trackedRace = createDynamicTrackedRace(boatClass, raceDefinition);
         trackedRace.setStartOfTrackingReceived(new MillisecondsTimePoint(1000));
         trackedRace.setEndOfTrackingReceived(new MillisecondsTimePoint(2000));
-        new FixLoaderAndTracker(trackedRace, store, null, dummyEventResolver, /* removeOutliersFromCompetitorTracks */ false);
+        new FixLoaderAndTracker(trackedRace, store, null, /* removeOutliersFromCompetitorTracks */ false);
         trackedRace.attachRaceLog(raceLog);
         trackedRace.attachRegattaLog(regattaLog);
         trackedRace.waitForLoadingToFinish();
@@ -140,7 +125,7 @@ public class TrackedRaceLoadsFixesTest extends AbstractGPSFixStoreTest {
         }
         store.storeFixes(device, fixes, /* returnManeuverUpdate */ false, /* returnLiveDelay */ false, /* filterByRegattaAndEventEndDate */ false);
         DynamicTrackedRace trackedRace = createDynamicTrackedRace(boatClass, raceDefinition);
-        new FixLoaderAndTracker(trackedRace, store, null, dummyEventResolver, /* removeOutliersFromCompetitorTracks */ false);
+        new FixLoaderAndTracker(trackedRace, store, null, /* removeOutliersFromCompetitorTracks */ false);
         raceLog.add(new RaceLogStartOfTrackingEventImpl(TimePoint.BeginningOfTime, author, 0));
         trackedRace.attachRaceLog(raceLog);
         trackedRace.attachRegattaLog(regattaLog);
@@ -533,7 +518,7 @@ public class TrackedRaceLoadsFixesTest extends AbstractGPSFixStoreTest {
         DynamicTrackedRace trackedRace = createDynamicTrackedRace(boatClass, raceDefinition);
         trackedRace.attachRaceLog(raceLog);
         trackedRace.attachRegattaLog(regattaLog);
-        new FixLoaderAndTracker(trackedRace, store, null, dummyEventResolver, /* removeOutliersFromCompetitorTracks */ false);
+        new FixLoaderAndTracker(trackedRace, store, null, /* removeOutliersFromCompetitorTracks */ false);
         for(Consumer<DynamicTrackedRace> afterTrackingStarted : afterTrackingStartedConsumers) {
             trackedRace.waitForLoadingToFinish();
             afterTrackingStarted.accept(trackedRace);

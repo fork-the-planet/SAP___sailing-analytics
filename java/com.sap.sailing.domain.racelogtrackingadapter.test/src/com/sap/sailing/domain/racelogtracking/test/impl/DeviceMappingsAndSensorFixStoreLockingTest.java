@@ -45,7 +45,7 @@ public class DeviceMappingsAndSensorFixStoreLockingTest extends AbstractGPSFixSt
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-                store.addListener((device, fix, returnManeuverChanges, returnLiveDelay, filterByRegattaAndEventEndDate) -> {
+                store.addListener((device, fix, returnManeuverChanges, returnLiveDelay) -> {
                     return null;
                 }, deviceIdentifier);
             }
@@ -59,7 +59,7 @@ public class DeviceMappingsAndSensorFixStoreLockingTest extends AbstractGPSFixSt
                     Map<RegattaLogDeviceMappingEvent<WithID>, MultiTimeRange> newlyCoveredTimeRanges) {
             }
         };
-        store.addListener((dev,  fix, returnManeuverChanges, returnLiveDelay, filterByRegattaAndEventEndDate)-> {
+        store.addListener((dev,  fix, returnManeuverChanges, returnLiveDelay)-> {
             try {
                 barrier.await();
             } catch (Exception e) {

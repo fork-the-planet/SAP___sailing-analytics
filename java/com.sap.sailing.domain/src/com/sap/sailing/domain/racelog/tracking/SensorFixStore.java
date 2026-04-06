@@ -68,7 +68,7 @@ public interface SensorFixStore {
      * @param filterByRegattaAndEventEndDate
      *            if {@code true}, then when forwarding this fix to this store's
      *            {@link #addListener(FixReceivedListener, DeviceIdentifier) listeners}, this parameter is passed on to
-     *            {@link FixReceivedListener#fixReceived(DeviceIdentifier, Timed, boolean, boolean, boolean)}. It leads
+     *            {@link FixReceivedListener#fixReceived(DeviceIdentifier, Timed, boolean, boolean)}. It leads
      *            to the fix's {@link Timed#getTimePoint() time point} being matched against the end date of any regatta
      *            and event that this listener is responsible for; then, fixes that are newer than these end dates are
      *            dropped and not recorded
@@ -95,7 +95,7 @@ public interface SensorFixStore {
      * @param filterByRegattaAndEventEndDate
      *            if {@code true}, then when forwarding this fix to this store's
      *            {@link #addListener(FixReceivedListener, DeviceIdentifier) listeners}, this parameter is passed on to
-     *            {@link FixReceivedListener#fixReceived(DeviceIdentifier, Timed, boolean, boolean, boolean)}. It leads
+     *            {@link FixReceivedListener#fixReceived(DeviceIdentifier, Timed, boolean, boolean)}. It leads
      *            to the fix's {@link Timed#getTimePoint() time point} being matched against the end date of any regatta
      *            and event that this listener is responsible for; then, fixes that are newer than these end dates are
      *            dropped and not recorded
