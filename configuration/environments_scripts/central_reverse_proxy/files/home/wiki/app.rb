@@ -127,8 +127,14 @@ class App < Precious::App
       return if login_path?(path)
       return if asset_path?(path)
       session[:prev] = path
-      return if public_path?(path)
-      halt 403, "Forbidden - You can not access anything outside wiki/ path." unless auth_path?(path)
+      LOGGER.debug(session[:prev])
+      isPublicPath = public_path?(path)
+      isAuthPath = auth_path?(path)
+      if isPublicPath || isAuthPath
+        session[:prev] = path
+        return
+      end
+      halt 403, "Forbidden - You can not access anything outside wiki/ path."
     end
 
     def authorize_write
