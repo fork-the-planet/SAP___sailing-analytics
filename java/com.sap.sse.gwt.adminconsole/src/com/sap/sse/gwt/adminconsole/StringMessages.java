@@ -43,7 +43,15 @@ public interface StringMessages extends com.sap.sse.gwt.client.StringMessages {
 
     String registeredAt(String string);
 
+    String registrationTime();
+
     String dropReplicaConnection();
+
+    String dropReplicas();
+
+    String replicaIdentifier();
+
+    String numberOfOperations();
 
     String replicables();
 
