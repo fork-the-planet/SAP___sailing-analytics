@@ -174,6 +174,12 @@ public class ReplicationPanel extends FlowPanel {
         masterpanel.add(masterPanelButtons);
         mastergroup.add(masterpanel);
         add(mastergroup);
+        // --- Details caption panel (below replicas table, shown for single selection) ---
+        replicaDetailPanel = new CaptionPanel();
+        replicaDetailGrid = new Grid(10, 2);
+        replicaDetailPanel.setContentWidget(replicaDetailGrid);
+        replicaDetailPanel.setVisible(false);
+        add(replicaDetailPanel);
         // --- Masters (replica side) ---
         final CaptionPanel replicagroup = new CaptionPanel(stringMessages.explainConnectionsToMaster());
         final VerticalPanel replicapanel = new VerticalPanel();
@@ -189,12 +195,6 @@ public class ReplicationPanel extends FlowPanel {
         replicapanel.add(replicapanelbuttons);
         replicagroup.add(replicapanel);
         add(replicagroup);
-        // --- Detail panel (below both tables, shown for single selection) ---
-        replicaDetailPanel = new CaptionPanel();
-        replicaDetailGrid = new Grid(10, 2);
-        replicaDetailPanel.setContentWidget(replicaDetailGrid);
-        replicaDetailPanel.setVisible(false);
-        add(replicaDetailPanel);
         replicaSelectionModel.addSelectionChangeHandler(event -> {
             final Set<ReplicaDTO> selected = replicaSelectionModel.getSelectedSet();
             if (selected.size() == 1) {
@@ -265,7 +265,7 @@ public class ReplicationPanel extends FlowPanel {
         table.addColumn(registeredAtColumn, "Registered");
         table.addColumn(avgOpsPerMsgColumn, "Ops/msg");
         table.addColumn(numMessagesSentColumn, "Messages");
-        table.addColumn(avgMsgSizeColumn, "Avg msg size");
+        table.addColumn(avgMsgSizeColumn, "Avg msg size (bytes)");
         table.addColumn(totalSizeColumn, "Total size");
         table.addColumn(totalOpsColumn, "Total ops");
         table.addColumn(actionsColumn, stringMessages.additionalInformation());
