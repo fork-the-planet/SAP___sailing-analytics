@@ -28,11 +28,11 @@ public class MiscellaneousDisplayImpl {
         selectionUi = new LabeledBox(boxTitle, tileList);
     }
     
-    public void setDidOptOutOfFeatureAndCommunityEmails(final boolean b, final boolean fireChangeHandlers) {
-        featureAndCommunityUpdates.setValue(b, fireChangeHandlers);
+    public void setDidOptOutOfFeatureAndCommunityEmails(final boolean didOptOutOfFeatureAndCommunityEmails, final boolean fireChangeHandlers) {
+        featureAndCommunityUpdates.setValue(didOptOutOfFeatureAndCommunityEmails, fireChangeHandlers);
     }
 
-    private AsyncCallback<VoidResult> wrapCallbackWithToastResponse(final boolean isNowTrue,
+    private AsyncCallback<VoidResult> wrapCallbackWithToastResponse(final boolean didOptOutOfFeatureAndCommunityEmails,
             final AsyncCallback<VoidResult> callback) {
         final AsyncCallback<VoidResult> callbackWrappedWithToastNotification = new AsyncCallback<VoidResult>() {
             @Override
@@ -47,9 +47,8 @@ public class MiscellaneousDisplayImpl {
             @Override
             public void onSuccess(VoidResult result) {
                 final String passAndTrue = StringMessages.INSTANCE.optedOutOfFeatureAndCommunityUpdates();
-                final String passAndFalse = StringMessages.INSTANCE
-                        .optedInToFeatureAndCommunityUpdates();
-                final String message = isNowTrue ? passAndTrue : passAndFalse;
+                final String passAndFalse = StringMessages.INSTANCE.optedInToFeatureAndCommunityUpdates();
+                final String message = didOptOutOfFeatureAndCommunityEmails ? passAndTrue : passAndFalse;
                 Notification.notify(message, NotificationType.SUCCESS);
                 if (callback != null) {
                     callback.onSuccess(result);
@@ -60,9 +59,9 @@ public class MiscellaneousDisplayImpl {
     }
 
     private CheckBoxTile composeFeatureAndCommunityUpdatesTile(final MiscPreferencesPresenter presenter) {
-        final BiConsumer<Boolean, AsyncCallback<VoidResult>> onToggle = (isNowTrue, callback) -> {
-            final AsyncCallback<VoidResult> wrappedCallback = wrapCallbackWithToastResponse(isNowTrue, callback);
-            presenter.updateDidOptOutOfFeatureAndCommunityEmails(isNowTrue, wrappedCallback);
+        final BiConsumer<Boolean, AsyncCallback<VoidResult>> onToggle = (didOptOutOfFeatureAndCommunityEmails, callback) -> {
+            final AsyncCallback<VoidResult> wrappedCallback = wrapCallbackWithToastResponse(didOptOutOfFeatureAndCommunityEmails, callback);
+            presenter.updateDidOptOutOfFeatureAndCommunityEmails(didOptOutOfFeatureAndCommunityEmails, wrappedCallback);
         };
         final String title = StringMessages.INSTANCE.featureAndCommunityUpdates();
         return new CheckBoxTile(title, false, onToggle);

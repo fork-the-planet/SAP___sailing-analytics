@@ -76,15 +76,15 @@ public class UserPreferencesPresenter<C extends ClientFactoryWithDispatch & Erro
         }
 
         @Override
-        public void initDidOptOutOfFeatureAndCommunityEmails(final boolean b) {
+        public void initDidOptOutOfFeatureAndCommunityEmails(final boolean didOptOutOfFeatureAndCommunityEmails) {
             if (display != null) {
-                display.setDidOptOutOfFeatureAndCommunityEmails(b, false);
+                display.setDidOptOutOfFeatureAndCommunityEmails(didOptOutOfFeatureAndCommunityEmails, false);
             }
         }
         
         @Override
-        public void updateDidOptOutOfFeatureAndCommunityEmails(final boolean b, final AsyncCallback<VoidResult> callback) {
-            clientFactory.getDispatch().execute(new SaveMiscEmailPreferences(b), callback);
+        public void updateDidOptOutOfFeatureAndCommunityEmails(final boolean didOptOutOfFeatureAndCommunityEmails, final AsyncCallback<VoidResult> callback) {
+            clientFactory.getDispatch().execute(new SaveMiscEmailPreferences(didOptOutOfFeatureAndCommunityEmails), callback);
         }
     }
     
@@ -195,5 +195,4 @@ public class UserPreferencesPresenter<C extends ClientFactoryWithDispatch & Erro
     public CompetitorSelectionPresenter getFavoriteCompetitorsDataProvider() {
         return competitorPresenter;
     }
-
 }
