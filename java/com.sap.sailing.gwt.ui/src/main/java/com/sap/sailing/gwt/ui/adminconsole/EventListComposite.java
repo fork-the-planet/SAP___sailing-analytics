@@ -469,7 +469,6 @@ public class EventListComposite extends Composite {
 
             @Override
             public void onSuccess(Void result) {
-                refreshableEventSelectionModel.clear();
                 presenter.getEventsRefresher().remove(event);
                 presenter.getEventsRefresher().callAllFill();
             }

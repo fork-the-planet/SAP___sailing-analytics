@@ -310,7 +310,6 @@ public class LeaderboardConfigPanel extends AbstractLeaderboardConfigPanel
         leaderboardActionColumn.addAction(LeaderboardConfigImagesBarCell.ACTION_UPDATE, UPDATE, this::editLeaderboard);
         leaderboardActionColumn.addAction(LeaderboardConfigImagesBarCell.ACTION_DELETE, DELETE, leaderboardDTO -> {
             if (Window.confirm(stringMessages.doYouReallyWantToRemoveLeaderboard(leaderboardDTO.getName()))) {
-                leaderboardSelectionModel.clear();
                 removeLeaderboard(leaderboardDTO);
             }
         });

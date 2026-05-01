@@ -212,18 +212,24 @@ public class SelectionCheckboxColumn<T> extends AbstractSortableColumnWithMinMax
     private EventTranslator<T> createSelectionEventTranslator() {
         return new EventTranslator<T>() {
             /**
-             * Don't clear the selection when the user has clicked on the checkbox column
+             * Don't clear the selection when the user has clicked on the checkbox column or
+             * on an actions column (ImagesBarColumn): action icon clicks must not disturb
+             * the multi-selection state.
              */
             @Override
             public boolean clearCurrentSelection(CellPreviewEvent<T> event) {
                 NativeEvent nativeEvent = event.getNativeEvent();
                 boolean ctrlOrMeta = nativeEvent.getCtrlKey() || nativeEvent.getMetaKey();
-                return !isSelectionCheckboxColumn(event) && !ctrlOrMeta;
+                return !isSelectionCheckboxColumn(event) && !isImagesBarColumn(event) && !ctrlOrMeta;
             }
 
             private boolean isSelectionCheckboxColumn(CellPreviewEvent<T> event) {
                 Column<?, ?> column = getColumn(event);
                 return column == SelectionCheckboxColumn.this;
+            }
+
+            private boolean isImagesBarColumn(CellPreviewEvent<T> event) {
+                return getColumn(event) instanceof ImagesBarColumn;
             }
             
             private Column<?, ?> getColumn(CellPreviewEvent<T> event) {

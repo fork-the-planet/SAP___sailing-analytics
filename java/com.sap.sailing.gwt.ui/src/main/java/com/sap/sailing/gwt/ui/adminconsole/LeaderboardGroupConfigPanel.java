@@ -552,7 +552,6 @@ public class LeaderboardGroupConfigPanel extends AbstractRegattaPanel
                 this::openEditLeaderboardGroupDialog);
         actionsColumn.addAction(LeaderboardGroupConfigImagesBarCell.ACTION_DELETE, DELETE, group -> {
             if (Window.confirm(stringMessages.doYouReallyWantToRemoveLeaderboardGroup(group.getName()))) {
-                refreshableGroupsSelectionModel.clear();
                 removeLeaderboardGroup(group);
             }
         });

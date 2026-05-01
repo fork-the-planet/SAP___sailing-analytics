@@ -285,7 +285,6 @@ public class RegattaListComposite extends Composite {
         actionsColumn.addAction(RegattaConfigImagesBarCell.ACTION_UPDATE, UPDATE, this::editRegatta);
         actionsColumn.addAction(RegattaConfigImagesBarCell.ACTION_DELETE, DELETE, regatta -> {
             if (Window.confirm(stringMessages.doYouReallyWantToRemoveRegatta(regatta.getName()))) {
-                refreshableRegattaMultiSelectionModel.clear();
                 removeRegatta(regatta);
             }
         });

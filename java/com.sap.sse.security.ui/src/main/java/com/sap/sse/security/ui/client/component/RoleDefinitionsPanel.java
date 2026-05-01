@@ -242,7 +242,6 @@ public class RoleDefinitionsPanel extends VerticalPanel {
 
             @Override
             public void onSuccess(Void result) {
-                refreshableRoleDefinitionMultiSelectionModel.clear();
                 updateRoleDefinitions();
             }
         });

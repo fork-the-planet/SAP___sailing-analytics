@@ -263,7 +263,6 @@ public class CourseTemplatePanel extends FlowPanel implements FilterablePanelPro
                 stringMessages);
         actionsColumn.addAction(ACTION_DELETE, DELETE, e -> {
             if (Window.confirm(stringMessages.doYouReallyWantToRemoveCourseTemplate(e.getName()))) {
-                refreshableSelectionModel.clear();
                 sailingService.removeCourseTemplates(Collections.singletonList(e.getUuid()), new AsyncCallback<Void>() {
 
                     @Override

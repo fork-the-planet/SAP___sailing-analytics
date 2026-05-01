@@ -513,7 +513,6 @@ public class MediaPanel extends FlowPanel implements FilterablePanelProvider<Med
                 new DefaultActionsImagesBarCell(stringMessages), userService);
         actionsColumn.addAction(ACTION_DELETE, DELETE, mediaTrack -> {
             if (Window.confirm(stringMessages.reallyRemoveMediaTrack(mediaTrack.title))) {
-                refreshableSelectionModel.clear();
                 removeMediaTrack(mediaTrack);
             }
         });
