@@ -1,6 +1,5 @@
 package com.sap.sse.gwt.client.celltable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.view.client.ListDataProvider;
@@ -142,12 +141,8 @@ public class RefreshableMultiSelectionModel<T> extends MultiSelectionModelWithSe
                     // Deselect items that are no longer present in newObjects (e.g. because they were deleted).
                     // newObjects comes from getAllListDataProvider() (the unfiltered list), so absence here means
                     // true deletion, not just a filter hiding the item.
-                    // Snapshot first to avoid ConcurrentModificationException while calling super.setSelected below.
-                    final List<T> selectedSnapshot = new ArrayList<>();
-                    for (final T s : getSelectedElements()) {
-                        selectedSnapshot.add(s);
-                    }
-                    for (final T selected : selectedSnapshot) {
+                    // getSelectedElements() already returns a snapshot copy, so no additional copy is needed here.
+                    for (final T selected : getSelectedElements()) {
                         boolean foundInNew = false;
                         for (final T candidate : newObjects) {
                             if (comp != null ? comp.representSameEntity(selected, candidate) : selected.equals(candidate)) {

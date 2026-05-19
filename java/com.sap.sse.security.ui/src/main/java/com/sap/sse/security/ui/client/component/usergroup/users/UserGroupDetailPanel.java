@@ -3,7 +3,6 @@ package com.sap.sse.security.ui.client.component.usergroup.users;
 import static com.sap.sse.security.shared.HasPermissions.DefaultActions.UPDATE;
 import static com.sap.sse.security.shared.impl.SecuredSecurityTypes.USER_GROUP;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +22,7 @@ import com.google.gwt.view.client.SelectionChangeEvent.Handler;
 import com.sap.sse.common.Util;
 import com.sap.sse.gwt.client.ErrorReporter;
 import com.sap.sse.gwt.client.celltable.CellTableWithCheckboxResources;
+import com.sap.sse.gwt.client.celltable.RefreshableMultiSelectionModel;
 import com.sap.sse.gwt.client.celltable.TableWrapper;
 import com.sap.sse.security.shared.dto.StrippedUserDTO;
 import com.sap.sse.security.shared.dto.UserGroupDTO;
@@ -106,11 +106,8 @@ public class UserGroupDetailPanel extends Composite
             final Set<UserGroupDTO> selectedUserGroups = userGroupSelectionModel.getSelectedSet();
             if (selectedUserGroups != null && selectedUserGroups.size() == 1) {
                 final UserGroupDTO selectedUserGroup = selectedUserGroups.iterator().next();
-                final List<StrippedUserDTO> users = new ArrayList<>(tenantUsersTable.getSelectionModel().getSelectedSet());
-                if (selectedUserGroups == null || selectedUserGroups.isEmpty()) {
-                    Window.alert(stringMessages.youHaveToSelectAUserGroup());
-                    return;
-                }
+                final RefreshableMultiSelectionModel<StrippedUserDTO> usersSelectionModel = tenantUsersTable.getSelectionModel();
+                final List<StrippedUserDTO> users = Util.asList(usersSelectionModel.getSelectedElements());
                 for (StrippedUserDTO user : users) {
                     final String username = user.getName();
                     userManagementService.removeUserFromUserGroup(selectedUserGroup.getId().toString(), username,
