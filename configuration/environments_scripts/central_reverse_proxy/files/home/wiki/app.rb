@@ -99,7 +99,8 @@ class App < Precious::App
     end
 
     if session[:prev]
-      redirect session[:prev].sub(/\/gollum\/(rename|delete)/, "")
+      target = session.delete(:prev)
+      redirect target.sub(/\/gollum\/(rename|delete)/, "")
     end
 
     redirect "/"
