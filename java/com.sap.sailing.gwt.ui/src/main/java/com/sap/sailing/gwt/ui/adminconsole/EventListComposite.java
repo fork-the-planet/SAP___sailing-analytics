@@ -759,12 +759,6 @@ public class EventListComposite extends Composite {
             noEventsLabel.setVisible(true);
         }
         allEvents.clear();
-        // TODO bug6256: events.leaderboardGroups now would have "copies" of those LeaderboardGroupDTOs
-        // that we have in availableLeaderboardGroups. We need to decide which set of LeaderboardGroupDTOs we consider
-        // authoritative. Intuitively, this should probably be the availableLeaderboardGroups, managed by the
-        // leaderboardGroupsDisplayer and hence consistent with all other occurrences of LeaderboardGroupDTOs
-        // across the admin console.  Therefore, we should "canonicalize" all LeaderboardGroupDTOs embedded in the
-        // events received here to align with those from availableLeaderboardGroups, based on their getId().
         events.forEach(e->{
             e.replaceLeaderboardGroupsWithSameId(availableLeaderboardGroupsById);
             allEvents.add(e);
