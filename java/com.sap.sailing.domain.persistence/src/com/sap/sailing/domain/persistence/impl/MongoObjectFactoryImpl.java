@@ -2091,7 +2091,14 @@ public class MongoObjectFactoryImpl implements MongoObjectFactory {
             }
         }
         result.put(FieldNames.MANEUVERS.name(), maneuverList);
-        maneuverCollection.replaceOne(query, result, new ReplaceOptions().upsert(true));
+        try {
+            maneuverCollection.replaceOne(query, result, new ReplaceOptions().upsert(true));
+        } catch (org.bson.BsonMaximumSizeExceededException e) {
+            logger.log(Level.WARNING, "Maneuver document for competitor "+competitor.getName()+
+                    " in race "+raceIdentifier+
+                    " got too big; what about bug 6226?", e);
+            throw e;
+        }
     }
 
     private Document generateManeuverDoc(Maneuver maneuver, Course course) {
