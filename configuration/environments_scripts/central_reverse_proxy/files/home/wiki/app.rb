@@ -32,11 +32,22 @@ class App < Precious::App
       :email => session[:email],
     }
   end
-  PUBLIC_STARTS = ["/Home", "/wiki", "/favicon.ico"].freeze
-  NON_PAGE_PATTERNS = %r{\A/gollum/(assets|commit|history|last_commit_info|search|search|latest_changes)}.freeze
-  AUTH_PATHS = %r{\A/gollum/(edit|create|rename|delete|overview|preview|create)}.freeze
-  LOGIN_PATHS = %r{\A/(login|callback|logout|cancel)}.freeze
+  before "/gollum/(overview|preview|latest_changes)" do
+    if !session[:logged_in]
+      halt 401, LOGIN_LINK
+    end
+  end
 
+  PUBLIC_STARTS = ["/Home", "/wiki", "/favicon.ico","/login","/callback","/logout"].freeze
+  NON_PAGE_PATTERNS = [%r{\A/gollum/(assets|commit|latest_changes)}, %r{\A/gollum/(last_commit_info|search)\z}].freeze
+  AUTH_PATHS = [%r{\A/gollum/(edit|create|rename|history|delete|create)}, %r{\A/gollum/(overview|preview)\z}].freeze # Require logged in.
+  LOGIN_PATHS = %r{\A/(login|callback|logout)}.freeze
+
+  START_TIME=Time.now.freeze
+  get '/robots.txt' do
+    content_type 'text/plain'
+    "User-agent: *\nDisallow: /"
+  end
 
   get "/logout" do
     if session[:access_token]
