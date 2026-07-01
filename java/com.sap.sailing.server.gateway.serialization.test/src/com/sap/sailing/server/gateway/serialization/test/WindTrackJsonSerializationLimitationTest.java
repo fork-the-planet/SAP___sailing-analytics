@@ -21,6 +21,7 @@ import com.sap.sailing.domain.common.impl.WindImpl;
 import com.sap.sailing.domain.common.impl.WindSourceImpl;
 import com.sap.sailing.domain.tracking.WindTrack;
 import com.sap.sailing.server.gateway.serialization.impl.DefaultWindTrackJsonSerializer;
+import com.sap.sse.common.Position;
 import com.sap.sse.common.TimePoint;
 import com.sap.sse.common.impl.DegreeBearingImpl;
 import com.sap.sse.common.impl.DegreePosition;
@@ -49,6 +50,9 @@ public class WindTrackJsonSerializationLimitationTest {
                         return true;
                     }
                 });
+        when(windTrack.getAveragedWind(ArgumentMatchers.any(Position.class), ArgumentMatchers.any(TimePoint.class)))
+                .thenReturn(new WindImpl(new DegreePosition(random.nextDouble(), random.nextDouble()), TimePoint.now(),
+                        new KnotSpeedWithBearingImpl(random.nextDouble(), new DegreeBearingImpl(random.nextDouble()))));
         final JSONObject json = serializer.serialize(windTrack);
         final Object windSourceKey = json.keySet().iterator().next();
         final JSONArray fixes = (JSONArray) json.get(windSourceKey);
