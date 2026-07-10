@@ -4,6 +4,10 @@
 
 # Sailing Analytics
 
+You're looking at the "downstream" repository whose "upstream" lives as [Eclipse Azimuth Sailing Analytics](https://github.com/eclipse-sailing-analytics/sailing-analytics). For any usual development activity, issue reporting, or pull requests, please refer to the upstream project. This downstream repository only contains SAP-specific branding, naming, or interfacing with other SAP technology such as a HANA Cloud data extractor.
+
+Note, that this repository is not technically set up as a Github "fork" of the upstream repository. It does contain a branch ``eclipse-main`` which is obtained from the upstream's ``main`` branch after careful review. Such reviews are necessary in particular because pushing to branches in this repository will trigger builds which in turn have access to repository secrets. After such careful reviews and a successful build, pull requests can be created locally inside this downstream repository here to incorporate the upstream changes.
+
 ## About this Project
 
 The Sailing Analytics, formerly known as the "SAP Sailing Analytics," are a solution for portraying and analyzing sailing regattas, supporting training scenarios, and powering the vast archive at https://sapsailing.com. The solution consists of a cloud application with a web-based user interface, as well as three companion apps that integrate with the cloud application. This repository has the code for the cloud-based web application, and two of the three mobile apps (Buoy Pinger and Race Manager). The third companion app (Sail Insight) is found in [another repository](https://github.com/SAP/sailing-analytics-sail-insight).
@@ -37,7 +41,6 @@ Based on the ``docker/docker-compose.yml`` definition you should end up with thr
 Try a request to [``http://127.0.0.1:8888/index.html``](http://127.0.0.1:8888/index.html) or [``http://127.0.0.1:8888/gwt/status``](http://127.0.0.1:8888/gwt/status) to see if things worked. The default login to your local administration console at [``http://127.0.0.1:8888/gwt/AdminConsole.html``](http://127.0.0.1:8888/gwt/AdminConsole.html) uses the user name ``admin`` with password ``admin``.
 
 To use Java 25, use the ``docker-compose-25.yml`` file instead:
-
 ```
     wget "https://github.com/SAP/sailing-analytics/raw/refs/heads/main/docker/docker-compose-25.yml"
     docker-compose -f docker-compose-25.yml up
@@ -45,7 +48,7 @@ To use Java 25, use the ``docker-compose-25.yml`` file instead:
 
 ## Requirements
 
-The software can be run on any Linux or Windows machine with ``bash`` installed; it has also been compiled successfully for the ARM platform and was deployed to a Raspberry Pi computer. As a database, MongoDB is required, tested with releases 4.4, 5.0, 6.0, and 7.0. For use in a replicated scenario (scale-out, high availability), RabbitMQ is required. A simple Docker Compose set-up can be used to tie these three components together, e.g., for a quick local test and to familiarize yourself with the application, as Docker images are produced on a regular basis.
+The software can be run on any Linux, MacOS or Windows machine with ``bash`` installed; it has also been compiled successfully for the ARM platform and was deployed to a Raspberry Pi computer. As a database, MongoDB is required, tested with releases 4.4, 5.0, 6.0, and 7.0. For use in a replicated scenario (scale-out, high availability), RabbitMQ is required. A simple Docker Compose set-up can be used to tie these three components together, e.g., for a quick local test and to familiarize yourself with the application, as Docker images are produced on a regular basis.
 
 Compute node and database sizing depends on several aspects of your workloads, such as whether live or replay data is to be served, how many different classes with separate leaderboard are racing concurrently, how many competitors are racing in each class, or how many concurrent viewers produce how many requests and which type (e.g., analytical, data mining, or watching a live race).
 
@@ -156,7 +159,6 @@ The build runs integration tests against [geonames.org](https://geonames.org). U
 ### Get the GitHub Actions build to work in your forked repository
 
 Assign the IDs and secrets from the prerequisites to repository secrets in your forked repository as follows:
-
 ```
 AWS_S3_TEST_S3ACCESSID: {your-S3-test-bucket-upload-token-ID}
 AWS_S3_TEST_S3ACCESSKEY: {key-for-your-S3-token}
@@ -211,7 +213,6 @@ Or you create a release by running
 which produces a tarball under ``dist/{release-name}-{timestamp}/{release-name}-{timestamp}.tar.gz`` which can then be used for ``scp``-based downloads with the ``refreshInstance.sh`` script under ``java/target``.
 
 Run the ``buildAndUpdateProduct.sh`` without any arguments to see the sub-commands and options available.
-
 
 ## Downloading, Installing and Running an Official Release
 

@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import com.google.gwt.cell.client.AbstractCell;
@@ -40,7 +39,6 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.view.client.SelectionChangeEvent;
 import com.sap.sailing.domain.common.dto.CourseAreaDTO;
 import com.sap.sailing.gwt.common.client.help.HelpButton;
 import com.sap.sailing.gwt.common.client.help.HelpButtonResources;
@@ -101,6 +99,7 @@ public class EventListComposite extends Composite {
     private final Displayer<LeaderboardGroupDTO> leaderboardGroupsDisplayer;
     private final Displayer<EventDTO> eventsDisplayer;
     private Iterable<LeaderboardGroupDTO> availableLeaderboardGroups;
+    private final Map<UUID, LeaderboardGroupDTO> availableLeaderboardGroupsById;
     
     public static class AnchorCell extends AbstractCell<SafeHtml> {
         @Override
@@ -129,6 +128,7 @@ public class EventListComposite extends Composite {
         this.presenter = presenter;
         this.placeController = placeController;
         this.availableLeaderboardGroups = Collections.emptyList();
+        this.availableLeaderboardGroupsById = new HashMap<>();
         this.allEvents = new ArrayList<EventDTO>();
         final VerticalPanel panel = new VerticalPanel();
         final AccessControlledButtonPanel buttonPanel = new AccessControlledButtonPanel(userService, EVENT);
@@ -178,21 +178,11 @@ public class EventListComposite extends Composite {
         final Button create = buttonPanel.addCreateAction(stringMessages.actionAddEvent(), this::openCreateEventDialog);
         create.ensureDebugId("CreateEventButton");
         final Button remove = buttonPanel.addRemoveAction(stringMessages.remove(), refreshableEventSelectionModel, true,
-                () -> removeEvents(refreshableEventSelectionModel.getSelectedSet()));
-        remove.ensureDebugId("RemoveEventsButton");
-        this.refreshableEventSelectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-            @Override
-            public void onSelectionChange(SelectionChangeEvent event) {
-                final Set<EventDTO> selectedEvents = refreshableEventSelectionModel.getSelectedSet();
-                boolean canDeleteAll = true;
-                for (EventDTO eventDTO : selectedEvents) {
-                    if (!userService.hasPermission(eventDTO, DefaultActions.DELETE)) {
-                        canDeleteAll = false;
-                    }
-                }
-                remove.setEnabled(!selectedEvents.isEmpty() && canDeleteAll);
-            }
+                () -> {
+            final List<EventDTO> selected = new ArrayList<>(refreshableEventSelectionModel.getSelectedSet());
+            removeEvents(selected);
         });
+        remove.ensureDebugId("RemoveEventsButton");
         buttonPanel.addUnsecuredWidget(new HelpButton(HelpButtonResources.INSTANCE,
                 stringMessages.videoGuide(), "https://sapsailing-documentation.s3-eu-west-1.amazonaws.com/adminconsole/CreatingYourFirstEvent.mp4"));
         panel.add(filterTextbox);
@@ -742,8 +732,22 @@ public class EventListComposite extends Composite {
         });
     }
 
+    /**
+     * Updates {@link #availableLeaderboardGroups} and {@link #availableLeaderboardGroupsById} from
+     * the {@code leaderboardGroups} iterable, filtered to those to which the user has {@link DefaultActions#UPDATE}
+     * permission. Then, these leaderboard groups are used to update {@link #allEvents all events} regarding the
+     * {@link LeaderboardGroupDTO}s they reference to ensure consistency for the {@link EventDTO}s and any
+     * other leaderboard group displayer.
+     */
     public void fillLeaderboardGroups(Iterable<LeaderboardGroupDTO> leaderboardGroups) {
         availableLeaderboardGroups = Util.filter(leaderboardGroups, lg->userService.hasPermission(lg, DefaultActions.UPDATE));
+        availableLeaderboardGroupsById.clear();
+        for (final LeaderboardGroupDTO lgDto : availableLeaderboardGroups) {
+            availableLeaderboardGroupsById.put(lgDto.getId(), lgDto);
+        }
+        for (final EventDTO event : allEvents) {
+            event.replaceLeaderboardGroupsWithSameId(availableLeaderboardGroupsById);
+        }
     }
 
     public void fillEvents(Iterable<EventDTO> events) {
@@ -755,7 +759,10 @@ public class EventListComposite extends Composite {
             noEventsLabel.setVisible(true);
         }
         allEvents.clear();
-        events.forEach(allEvents::add);
+        events.forEach(e->{
+            e.replaceLeaderboardGroupsWithSameId(availableLeaderboardGroupsById);
+            allEvents.add(e);
+        });
         filterTextbox.updateAll(allEvents);
         eventTable.redraw();
     }

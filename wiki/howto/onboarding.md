@@ -9,6 +9,10 @@ First of all, make sure you've looked at [http://www.amazon.de/Patterns-Elements
 
 1. Git Account
 
+Note that the Github repository mentioned here is a "downstream" repository for the "upstream" repo at https://github.com/eclipse-sailing-analytics/sailing-analytics. The downstream repo contains a "friendly fork" that is not technically a fork in the Github sense but contains differences between its ``main`` branch and the upstream ``main`` branch. Those deviations mostly revolve around branding and naming aspects. If not working specifically on this kind of changes, please work with the upstream repo as a default and use this downstream repo only for such branding and SAP-specific changes.
+
+In particular, you must *never* merge or push this repo's ``main`` branch into the upstream repo's ``main`` branch; otherwise you would risk contaminating upstream with SAP specifics. Merging the upstream's ``main`` branch into this downstream repo's ``main`` branch, however, should work without problems and should happen on a regular basis after reviewing the upstream changes carefully.
+
    - The primary Git repository for the project is hosted on Github (see [https://github.com/SAP/sailing-analytics](https://github.com/SAP/sailing-analytics)). To clone, use ``git@github.com:SAP/sailing-analytics.git``.
    - If you are on Windows, keep in mind you may run into the following problem. By default, the filesystem in Windows enforces a 260 character limit on paths. The longest path length for a file in this project, if the drive name is included, is 263 characters. A possible solution is to pass a single character name for the project folder in the git clone command, and clone the project on drive root, which may bring the longest file path down to compatible length. Alternatively, Windows 10 and 11 offer settings to enable a much much longer maximum file path that requires additional configuration. You may check that out at your own will.
    - To gain write access you have to become member of the [sailing-analytics-team](https://github.com/orgs/SAP/teams/sailing-analytics-team) organization. For that you need to [link your Github user to the Github SAP organization](https://wiki.one.int.sap/wiki/display/ospodocs/Self-Service+for+Joining+an+SAP+GitHub+Organization). For that to work, your Github account needs to have your @sap.com e-mail address assigned and verified. We still have a shadow repository around that, e.g., powers our Wiki at [https://wiki.sapsailing.com](https://wiki.sapsailing.com) and which lives at ``ssh://trac@sapsailing.com/home/trac/git``. 
@@ -22,11 +26,10 @@ First of all, make sure you've looked at [http://www.amazon.de/Patterns-Elements
    Everytime you use your ssh key with encryption key you get prompted to provide the passphrase.
    To automate this process you can setup an ssh agent. On Linux your desktop environment will usually handle this for you. For macOS you can use this [guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
 
-2. Bugzilla
+2. Issues
 
-   - Create an account at https://bugzilla.sapsailing.com
-   - Ask a Bugzilla administrator (e.g., axel.uhl@sap.com) to enable your account for editing bugs
-   - Bugzilla URL: [https://bugzilla.sapsailing.com](https://bugzilla.sapsailing.com)
+   - By and large, the upstream repo's issue tracked at [https://github.com/eclipse-sailing-analytics/sailing-analytics/issues](https://github.com/eclipse-sailing-analytics/sailing-analytics/issues) shall be used.
+   - Use [https://github.com/SAP/sailing-analytics/issues](https://github.com/SAP/sailing-analytics/issues) only for issues and tasks that specifically refer to the SAP downstream repository and are of no relevance to the upstream versions.
 
 3. Wiki
 
@@ -47,7 +50,7 @@ First of all, make sure you've looked at [http://www.amazon.de/Patterns-Elements
 6. RabbitMQ, download from [http://www.rabbitmq.com](http://www.rabbitmq.com). Requires Erlang to be installed. RabbitMQ installer will assist in installing Erlang. Some sources report that there may be trouble with the latest versions of RabbitMQ. In some cases, McAffee seems to block the installation of the latest version on SAP hardware; in other cases connection problems to the newest versions have been reported. We know that version 3.6.8 works well. [https://github.com/rabbitmq/rabbitmq-server/releases/tag/rabbitmq_v3_6_8](https://github.com/rabbitmq/rabbitmq-server/releases/tag/rabbitmq_v3_6_8)
 7.  Maven 3.1.1 (or higher), [http://maven.apache.org](http://maven.apache.org)
     A setup guide for windows can be found on this webpage: [https://maven.apache.org/guides/getting-started/windows-prerequisites.html](https://maven.apache.org/guides/getting-started/windows-prerequisites.html)
-8.  Forked GWT SDK 2.12.4 release [https://github.com/SAP/gwt-forward-serialization-rpc/releases/download/gwt-2.12.4/gwt-2.12.4.zip](https://github.com/SAP/gwt-forward-serialization-rpc/releases/download/gwt-2.12.4/gwt-2.12.4.zip)). The official releases can be found at [http://www.gwtproject.org/download.html](http://www.gwtproject.org/download.html)
+8.  Forked GWT SDK 2.12.4 release [https://github.com/eclipse-sailing-analytics/gwt-forward-serialization-rpc/releases/download/gwt-2.12.4/gwt-2.12.4.zip](https://github.com/eclipse-sailing-analytics/gwt-forward-serialization-rpc/releases/download/gwt-2.12.4/gwt-2.12.4.zip)). The official releases can be found at [http://www.gwtproject.org/download.html](http://www.gwtproject.org/download.html)
     but shouldn't be used unless we roll back the changes of branch ``bug5077`` or GWT has merged and released the [pull request 9779](https://github.com/gwtproject/gwt/pull/9779).
     Download the GWT SDK and extract it to a location of your preference (e.g. `C:\Program Files\gwt` on Windows or `/opt` on Linux or MacOS/X).
     You will see in section [Tuning the Eclipse Installation](#tuning-the-eclipse-installation)
@@ -73,6 +76,17 @@ First of all, make sure you've looked at [http://www.amazon.de/Patterns-Elements
 4. Firebug (javascript & .css debugging, included in Firefox Developer Tools in newer versions of Firefox by default)
 
 ### Git repository configuration essentials
+
+When working with both, the upstream Eclipse project *and* this downstream SAP-specific version, consider naming your local branches such that accidentally merging downstream changes into upstream becomes unlikely. For example, consider using unique local branch names such as ``eclipse-main`` and ``sap-main`` that you may configure as tracking the correct remote branch. E.g.:
+
+```
+git remote add eclipse git@github.com:eclipse-sailing-analytics/sailing-analytics
+git remote add sap git@github.com:SAP/sailing-analytics
+git fetch eclipse
+git fetch sap
+git checkout -b sap-main sap/main
+git checkout -b eclipse-main eclipse/main
+```
 
 The project has some configuration of line endings for specific file types in ".gitattributes". To make this work as intended, you need to ensure that the git attribute "core.autocrlf" is set to "false". This can be done by navigating to your local repository in a Bash/Git Bash/Cygwin instance and executing the command `git config core.autocrlf false`.
 
@@ -249,8 +263,7 @@ Install the GWT Browser Plugin for the GWT Development mode. As of 2016-08-31 Fi
 
 ### Create Hudson Job
 If you want a hudson job to run when you push your branch then you can run a script in `configuration` called `createHudsonJobForBug.sh`. For you bug branch titled `bug<bug number>`, create a build job, which will create a release, by running the script like so: `./createHudsonJobForBug.sh <bug number>`.
-If you'd like the script to include the bug's summary in its description, set your BUGZILLA_API_KEY environment variable to an API key you obtain from [https://bugzilla.sapsailing.com/bugzilla/userprefs.cgi?tab=apikey](https://bugzilla.sapsailing.com/bugzilla/userprefs.cgi?tab=apikey) or pass the API key as the second argument, after the bug ID, as in
-`./configuration/createHudsonJobForBug.sh <bug number> {Bugzilla-API-Key}`
+The script will include the issue's summary in its description.
 If on Windows, you may need to disable any web shields in antivirus software, to allow `curl` to function. If on Mac, you may need to install gnu-sed (``gsed``) via Homebrew.
 
 ### Issues when playing around with AWS
@@ -263,4 +276,5 @@ Solution: This was occurring because the website didn't have any content in the 
 
 ### Extra Reading
 Check out [refactoring patterns](https://refactoring.guru/) as a sort of cheatsheet for the aforementioned design patterns books.
+The [Pragmatic Programmer](https://en.wikipedia.org/wiki/The_Pragmatic_Programmer) is a great read too.
 We also have an [onboarding glossary](https://wiki.sapsailing.com/wiki/howto/glossary).
