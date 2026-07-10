@@ -56,6 +56,9 @@ jobs:
           POLAR_DATA_BASE_URL: ${{ vars.POLAR_DATA_BASE_URL }}
           JAVA8_HOME: ${{env.JAVA_HOME_8_X64}}
           JAVA17_HOME: ${{env.JAVA_HOME_17_X64}}
+          SCP_USERNAME: ${{ vars.SCP_USERNAME }}
+          SCP_KEY: ${{ secrets.SCP_KEY }}
+          SCP_PASSPHRASE: ${{ secrets.SCP_PASSPHRASE }}
         run: |
             ./java/com.amazon.aws.aws-java-api/createLocalAwsApiP2Repository.sh 2>&1 >build.log
       - name: Upload build log
@@ -68,28 +71,15 @@ jobs:
       - name: Upload p2 site as artifact
         uses: actions/upload-artifact@v4
         with:
-            TODO: grab p2 repo output and zip it up...
             name: awk-sdk-p2
             path: java/com.amazon.aws.aws-java-api/target/repository/**/*
             retention-days: 90
-      - name: Upload p2 site to target share
-        env:
-          CI_JOB_USERNAME: ${{ vars.CI_JOB_USERNAME }}
-          CI_JOB_PASSWORD: ${{ secrets.CI_JOB_PASSWORD }}
-          CI_JOB_TOKEN: ${{ secrets.CI_JOB_TOKEN }}
-        if: ${{ always() && env.CI_JOB_USERNAME != '' && env.CI_JOB_PASSWORD != '' && env.CI_JOB_TOKEN != '' }}
-        shell: bash
-        run: |
-            eval "$(ssh-agent -s)"
-            cat > askpass.sh <<'EOF'
-            #!/bin/sh
-            echo "$SCP_PASSPHRASE"
-            EOF
-            chmod 700 askpass.sh
-            export SCP_PASSPHRASE="${{ secrets.SCP_PASSPHRASE }}"
-            export SSH_ASKPASS="$PWD/askpass.sh"
-            export DISPLAY=:0
-            printf '%s\n' "${{ secrets.SCP_KEY }}" > id_ed25519
-            chmod 600 id_ed25519
-            setsid ssh-add id_ed25519 </dev/null
-            scp -rp TODO continue here...
+      - name: SCP artifacts to download.eclipse.org
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1
+        with:
+          host: projects-storage.eclipse.org
+          username: ${{ secrets.SCP_USERNAME }}
+          key: ${{ secrets.SCP_KEY }}
+          passphrase: ${{ secrets.SCP_PASSPHRASE }}
+          source: "java/com.amazon.aws.aws-java-api/target/repository"
+          target: "/home/data/httpd/sailing-analytics/p2/aws-sdk"
