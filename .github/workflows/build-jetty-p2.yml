@@ -19,7 +19,7 @@ jobs:
       - name: Download Eclipse Platform Runtime
         run: |
           curl -fsSL \
-            https://download.eclipse.org/eclipse/downloads/latest-R/eclipse-platform-4.37-R-linux-gtk-x86_64.tar.gz \
+            https://download.eclipse.org/eclipse/downloads/drops4/R-4.38-202512010920/download.php?dropFile=eclipse-platform-4.38-linux-gtk-x86_64.tar.gz \
             -o eclipse.tar.gz
           tar -xzf eclipse.tar.gz
       - name: Mirror Jetty p2 repository
