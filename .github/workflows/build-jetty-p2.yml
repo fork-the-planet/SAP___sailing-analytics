@@ -16,6 +16,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - name: Download Eclipse Platform Runtime
+        run: |
+          curl -fsSL \
+            https://download.eclipse.org/eclipse/downloads/latest-R/eclipse-platform-4.37-R-linux-gtk-x86_64.tar.gz \
+            -o eclipse.tar.gz
+          tar -xzf eclipse.tar.gz
       - name: Mirror Jetty p2 repository
         shell: bash
         run: |
@@ -28,11 +34,19 @@ jobs:
           )
           echo "Found version ${VERSION}"
           echo "VERSION=${VERSION}" >> "${GITHUB_ENV}"
-          mvn \
-            org.eclipse.tycho:tycho-p2-repository-plugin:mirror \
-            -Dsource=https://download.eclipse.org/jetty/updates/jetty-bundles-9.x/${VERSION}/ \
-            -Ddestination=${GITHUB_WORKSPACE}/repository \
-            2>&1 | tee build.log
+          mkdir repository
+          ./eclipse/eclipse \
+            -nosplash \
+            -verbose \
+            -application org.eclipse.equinox.p2.metadata.repository.mirrorApplication \
+            -source https://download.eclipse.org/jetty/updates/jetty-bundles-9.x/${VERSION}/ \
+            -destination file:${PWD}/repository 2>&1 | tee build.log
+          ./eclipse/eclipse \
+            -nosplash \
+            -verbose \
+            -application org.eclipse.equinox.p2.artifact.repository.mirrorApplication \
+            -source https://download.eclipse.org/jetty/updates/jetty-bundles-9.x/${VERSION}/ \
+            -destination file:${PWD}/repository 2>&1 | tee -a build.log
       - name: Upload build log
         uses: actions/upload-artifact@v4
         if: always()
