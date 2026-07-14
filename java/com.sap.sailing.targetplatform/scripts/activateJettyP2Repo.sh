@@ -1,10 +1,10 @@
 #!/bin/bash
 #
 # After creating the p2 repository with createJettyP2RepoFromMavenCentral.sh,
-# this script uploads it and updates all references in the workspace.
+# this script updates all references in the workspace.
 #
 # Usage:
-#   ./uploadAndActivateJettyP2Repo.sh [VERSION]
+#   ./activateJettyP2Repo.sh [VERSION]
 #
 #   VERSION defaults to 9.4.58.v20250814 if not supplied.
 #

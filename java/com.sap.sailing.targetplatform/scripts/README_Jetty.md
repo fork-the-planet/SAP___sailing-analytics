@@ -184,7 +184,7 @@ unzip -p some-jetty-bundle.jar META-INF/MANIFEST.MF | grep Bundle-SymbolicName
 | Script | What it does |
 |--------|--------------|
 | `createJettyP2RepoFromMavenCentral.sh` | Downloads Jetty bundles from Maven Central and builds a local p2 repository. |
-| `uploadAndActivateJettyP2Repo.sh` | Uploads the p2 repo and updates all version references in the workspace. |
+| `activateJettyP2Repo.sh` | Updates all version references in the workspace. |
 | `createAndUploadJettyP2Repository.sh` | *(legacy)* Mirrors an existing Eclipse-hosted p2 site. Use this when the version **is** available at `download.eclipse.org`. |
 | `createLocalBaseP2repository.sh` | Builds the local `target-base` p2 repository via Tycho. |
 | `uploadRepositoryToServer.sh` | Uploads the `target-base` p2 repository to `sapsailing.com`. |
